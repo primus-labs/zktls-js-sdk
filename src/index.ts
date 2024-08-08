@@ -1,8 +1,15 @@
 
-import { PADOEXTENSIONID } from "./config/constants";
+import { PADOEXTENSIONID,ATTESTATIONPOLLINGTIME ,ATTESTATIONPOLLINGTIMEOUT} from "./config/constants";
 export default class ZkAttestationJSSDK {
   available?: boolean;
-  constructor() {}
+  attestationTypeId: number;
+  chainName: string;
+  walletAddress: string;
+  constructor(attestationTypeId: number, chainName: string, walletAddress: string) {
+    this.attestationTypeId= attestationTypeId;
+    this.chainName= chainName;
+    this.walletAddress=walletAddress;
+  }
   isAuthorized() {}
   async isAvailable() {
     try {
@@ -41,47 +48,117 @@ export default class ZkAttestationJSSDK {
       target: "padoExtension",
       origin: "padoZKAttestationJSSDK",
       name: "startAttest",
-      params: {},
+      params: {
+        attestationTypeId: this.attestationTypeId,
+        walletAddress: this.walletAddress
+      },
     });
     return new Promise((resolve,reject) => {
       // @ts-ignore
-      let timer = null
+      let pollingTimer = null
+      let timeoueTimer = null
       window.addEventListener("message", async (event) => {
         const { target, name, params } = event.data;
-        
         if (target === "padoZKAttestationJSSDK") {
           if (name === "getAttestationRes") {
             console.log('333 sdk receive getAttestationRes', params)
-            // resolve(event.data.params);
-            timer = setInterval(() => {
-              window.postMessage({
-                target: "padoExtension",
-                origin: "padoZKAttestationJSSDK",
-                name: "getAttestationResult",
-                params: {},
-              });
-            }, 500)
+            const { result } = params
+            if (result) {
+              timeoueTimer = setTimeout(() => {
+                if (pollingTimer) {
+                  clearInterval(pollingTimer)
+                  reject(false)
+                }
+              },ATTESTATIONPOLLINGTIMEOUT)
+              pollingTimer = setInterval(() => {
+                window.postMessage({
+                  target: "padoExtension",
+                  origin: "padoZKAttestationJSSDK",
+                  name: "getAttestationResult",
+                  params:{}
+                });
+              }, ATTESTATIONPOLLINGTIME)
+            } else {
+              reject(false)
+            }
+            // const { retcode } = JSON.parse(params);
+            // if (retcode === '0') {
+            //   timeoueTimer = setTimeout(() => {
+            //     if (pollingTimer) {
+            //       clearInterval(pollingTimer)
+            //       reject(false)
+            //     }
+            //   },ATTESTATIONPOLLINGTIMEOUT)
+            //   pollingTimer = setInterval(() => {
+            //     window.postMessage({
+            //       target: "padoExtension",
+            //       origin: "padoZKAttestationJSSDK",
+            //       name: "getAttestationResult",
+            //       params:{}
+            //     });
+            //   }, ATTESTATIONPOLLINGTIME)
+            // } else if (retcode === '2') {
+            //   // TODO-sdk
+            //   const errorMsgTitle = `Humanity Verification failed!`
+            //   const msgObj = {
+            //     type: 'error',
+            //     title: errorMsgTitle,
+            //     desc: 'The algorithm has not been initialized.Please try again later.',
+            //     sourcePageTip: errorMsgTitle,
+            //   };
+            //   window.postMessage({
+            //       target: "padoExtension",
+            //       origin: "padoZKAttestationJSSDK",
+            //       name: "attestResult",
+            //       params: {
+            //         result: 'warn',
+            //           failReason: {
+            //             ...msgObj,
+            //           },
+            //         }
+            //   });
+              
+            //   reject({
+            //     result: false,
+            //     msg: 'The algorithm has not been initialized.Please try again later.',
+            //   })
+            //   // algorithm is not initialized
+            // }
           }
           if (name === "getAttestationResultRes") {
             console.log('333 sdk receive getAttestationResultRes', params)
-            const { retcode,} = JSON.parse(params);
-            if (retcode === '0' || retcode === '2') {
-              // @ts-ignore
-              clearInterval(timer)
+            if (params) {
+              const { retcode, content, retdesc, details } = JSON.parse(params);
+            const { activeRequestAttestation } = await chrome.storage.local.get([
+              'activeRequestAttestation',
+            ]);
+
+            const parsedActiveRequestAttestation = activeRequestAttestation
+              ? JSON.parse(activeRequestAttestation)
+              : {};
+            const errorMsgTitle = 'Humanity Verification failed!';
               
-            }
-            if (retcode === '0') {
-              window.postMessage({
-                target: "padoExtension",
-                origin: "padoZKAttestationJSSDK",
-                name: "attestResult",
-                params: {
-                  result: 'success',
-                },
-              })
-              resolve(true)
-            } else if (retcode === '2') {
-              reject(false)
+              
+              if (retcode === '0' || retcode === '2') {
+                // @ts-ignore
+                clearInterval(pollingTimer)
+              }
+              if (retcode === '0') {
+                window.postMessage({
+                  target: "padoExtension",
+                  origin: "padoZKAttestationJSSDK",
+                  name: "attestResult",
+                  params: {
+                    result: 'success',
+                  },
+                })
+                resolve(true)
+              } else if (retcode === '2') {
+                reject({
+                  result: false,
+                  msg: '??',
+                })
+              }
             }
           }
         }
