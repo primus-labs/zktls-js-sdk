@@ -1,5 +1,6 @@
 
-import { PADOEXTENSIONID,ATTESTATIONPOLLINGTIME ,ATTESTATIONPOLLINGTIMEOUT} from "./config/constants";
+import { PADOEXTENSIONID, ATTESTATIONPOLLINGTIME, ATTESTATIONPOLLINGTIMEOUT } from "./config/constants";
+
 export default class ZkAttestationJSSDK {
   available?: boolean;
   attestationTypeId: number;
@@ -30,7 +31,6 @@ export default class ZkAttestationJSSDK {
       origin: "padoZKAttestationJSSDK",
       name: "initAttest",
     });
-    
     return new Promise((resolve,) => {
       window.addEventListener("message", (event) => {
         const { target, name } = event.data;
@@ -54,9 +54,10 @@ export default class ZkAttestationJSSDK {
       },
     });
     return new Promise((resolve,reject) => {
-      // @ts-ignore
-      let pollingTimer = null
-      let timeoueTimer = null
+      
+      let pollingTimer:any
+      
+      let timeoueTimer:any
       window.addEventListener("message", async (event) => {
         const { target, name, params } = event.data;
         if (target === "padoZKAttestationJSSDK") {
@@ -67,6 +68,12 @@ export default class ZkAttestationJSSDK {
               timeoueTimer = setTimeout(() => {
                 if (pollingTimer) {
                   clearInterval(pollingTimer)
+                  window.postMessage({
+                    target: "padoExtension",
+                    origin: "padoZKAttestationJSSDK",
+                    name: "getAttestationResultTimeout",
+                    params:{}
+                  });
                   reject(false)
                 }
               },ATTESTATIONPOLLINGTIMEOUT)
@@ -125,40 +132,19 @@ export default class ZkAttestationJSSDK {
             //   // algorithm is not initialized
             // }
           }
-          if (name === "getAttestationResultRes") {
-            console.log('333 sdk receive getAttestationResultRes', params)
-            if (params) {
-              const { retcode, content, retdesc, details } = JSON.parse(params);
-            const { activeRequestAttestation } = await chrome.storage.local.get([
-              'activeRequestAttestation',
-            ]);
-
-            const parsedActiveRequestAttestation = activeRequestAttestation
-              ? JSON.parse(activeRequestAttestation)
-              : {};
-            const errorMsgTitle = 'Humanity Verification failed!';
-              
-              
-              if (retcode === '0' || retcode === '2') {
-                // @ts-ignore
-                clearInterval(pollingTimer)
+          // if (name === "getAttestationResultRes") {
+          if (name === "startAttestationRes") {
+            const { result ,reStartFlag} = params
+            console.log('333-sdk-receive getAttestationResultRes', params)
+            if (result) {
+              clearInterval(pollingTimer)
+              clearTimeout(timeoueTimer)
+              resolve(true)
+            } else {
+              if (reStartFlag) {
+                this.initAttestation()
               }
-              if (retcode === '0') {
-                window.postMessage({
-                  target: "padoExtension",
-                  origin: "padoZKAttestationJSSDK",
-                  name: "attestResult",
-                  params: {
-                    result: 'success',
-                  },
-                })
-                resolve(true)
-              } else if (retcode === '2') {
-                reject({
-                  result: false,
-                  msg: '??',
-                })
-              }
+              reject(false)
             }
           }
         }
@@ -166,7 +152,9 @@ export default class ZkAttestationJSSDK {
     });
   }
 
-  verifyAttestation() {}
+  verifyAttestation() {
+    
+  }
   sendToChain() {}
 }
 
