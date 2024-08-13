@@ -6,11 +6,14 @@ export default class ZkAttestationJSSDK {
   attestationTypeId: number;
   chainName: string;
   walletAddress: string;
-  constructor(attestationTypeId: number, chainName: string, walletAddress: string) {
+  assetsParams: { tokenSymbol?: string; assetsBalance?: string;  followersCount?:string}
+  constructor(attestationTypeId: number, chainName: string, walletAddress: string, assetsParams = {}) {
     this.attestationTypeId= attestationTypeId;
     this.chainName= chainName;
-    this.walletAddress=walletAddress;
+    this.walletAddress = walletAddress;
+    this.assetsParams = assetsParams
   }
+
   isAuthorized() {}
   async isAvailable() {
     try {
@@ -50,7 +53,12 @@ export default class ZkAttestationJSSDK {
       name: "startAttest",
       params: {
         attestationTypeId: this.attestationTypeId,
-        walletAddress: this.walletAddress
+        walletAddress: this.walletAddress,
+        params: {
+          tokenSymbol: this.assetsParams.tokenSymbol,
+          assetsBalance: this.assetsParams.assetsBalance,
+          followersCount: this.assetsParams.followersCount,
+        }
       },
     });
     return new Promise((resolve,reject) => {
@@ -74,7 +82,7 @@ export default class ZkAttestationJSSDK {
                     name: "getAttestationResultTimeout",
                     params:{}
                   });
-                  reject(false)
+                  // reject(false)
                 }
               },ATTESTATIONPOLLINGTIMEOUT)
               pollingTimer = setInterval(() => {
