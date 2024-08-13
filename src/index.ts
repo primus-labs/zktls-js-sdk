@@ -6,12 +6,14 @@ export default class ZkAttestationJSSDK {
   attestationTypeId: number;
   chainName: string;
   walletAddress: string;
-  assetsParams: { tokenSymbol?: string; assetsBalance?: string;  followersCount?:string}
+  assetsParams: { tokenSymbol?: string; assetsBalance?: string; followersCount?: string }
+  attestationId: string;
   constructor(attestationTypeId: number, chainName: string, walletAddress: string, assetsParams = {}) {
     this.attestationTypeId= attestationTypeId;
     this.chainName= chainName;
     this.walletAddress = walletAddress;
     this.assetsParams = assetsParams
+    this.attestationId = ''
   }
 
   isAuthorized() {}
@@ -142,12 +144,13 @@ export default class ZkAttestationJSSDK {
           }
           // if (name === "getAttestationResultRes") {
           if (name === "startAttestationRes") {
-            const { result ,reStartFlag} = params
+            const { result ,reStartFlag,attestationRequestId} = params
             console.log('333-sdk-receive getAttestationResultRes', params)
             if (result) {
               clearInterval(pollingTimer)
               clearTimeout(timeoueTimer)
-              resolve(true)
+              this.attestationId = attestationRequestId
+              resolve(this.attestationId)
             } else {
               if (reStartFlag) {
                 this.initAttestation()
@@ -160,8 +163,32 @@ export default class ZkAttestationJSSDK {
     });
   }
 
-  verifyAttestation() {
-    
+  verifyAttestation(attestationId: string) {
+    window.postMessage({
+      target: "padoExtension",
+      origin: "padoZKAttestationJSSDK",
+      name: "verifyAttestation",
+      params: {
+        attestationRequestId: attestationId,
+        chainName: this.chainName
+      },
+    });
+    return new Promise((resolve,reject) => {
+      window.addEventListener("message", async (event) => {
+        const { target, name, params } = event.data;
+        if (target === "padoZKAttestationJSSDK") {
+          if (name === "verifyAttestationRes") {
+            console.log('333 sdk receive verifyAttestationRes', params)
+            const { result } = params
+            if (result) {
+              resolve(true)
+            } else {
+              reject(false)
+            }
+          }
+        }
+      });
+    });
   }
   sendToChain() {}
 }
