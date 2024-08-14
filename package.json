@@ -20,6 +20,10 @@
     "publish": "rm -rf dist/demo dist/test && npm publish --access public",
     "test": "jest"
   },
+  "dependencies":{
+    "ethers": "5.7.2",
+    "@ethereum-attestation-service/eas-sdk": "^0.29.0"
+  },
   "devDependencies": {
     "@types/jest": "^29.5.12",
     "@types/node": "^20.12.7",
