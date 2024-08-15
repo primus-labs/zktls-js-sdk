@@ -1,7 +1,7 @@
 import { ethers, utils } from 'ethers';
 import { defaultAbiCoder } from 'ethers/lib/utils';
 import { ZERO_BYTES32} from '@ethereum-attestation-service/eas-sdk';
-import { PADOEXTENSIONID, ATTESTATIONPOLLINGTIME, ATTESTATIONPOLLINGTIMEOUT, PADOADDRESS,EASInfo } from "./config/constants";
+import { ATTESTATIONPOLLINGTIME, ATTESTATIONPOLLINGTIMEOUT, PADOADDRESS,EASInfo } from "./config/constants";
 import { lineaportalabi } from './config/lineaportalabi';
 import { proxyabi } from './config/proxyabi';
 type AttestationParams = {
@@ -11,66 +11,145 @@ type AttestationParams = {
   followersCount?: string
 }
 export default class ZkAttestationJSSDK {
-  available?: boolean;
-  chainName: string;
-  walletAddress: string;
-  attestationParams: AttestationParams
-  attestationId: string;
-  eip712Msg: any
-  constructor(attestationParams: AttestationParams, chainName: string, walletAddress: string) {
-    this.attestationParams = attestationParams
-    this.chainName = chainName;
-    this.walletAddress = walletAddress;
-    this.attestationId = ''
+  isInstalled?: boolean;
+  isInitialized: boolean;
+
+  constructor() {
+    this.isInitialized = false
+    this.isInstalled = false
+    // this.fetchIsInstalled()
   }
 
-  isAuthorized() { }
-  async isAvailable() {
-    try {
-      const url = `chrome-extension://${PADOEXTENSIONID}/logo.png`;
-      const { statusText } = await fetch(url);
-      if (statusText === "OK") {
-        this.available = true;
-        return true;
-      }
-      return false;
-    } catch (error) {
-      return false;
-    }
-  }
+  // isAuthorized() { }
+  // async fetchIsAvailable() {
+  //   try {
+  //     const url = `chrome-extension://${PADOEXTENSIONID}/logo.png`;
+  //     console.log('333-isAvailable1', url)
+  //     const res = await fetch(url);
+  //     const { statusText} = res
+  //     console.log('333-isAvailable2', res)
+  //     if (statusText === "OK") {
+  //       this.isInstalled = true;
+  //       return true;
+  //     }
+  //     return false;
+  //   } catch (error) {
+  //     console.log('333-isAvailable3', error)
+  //     return false;
+  //   }
+  // }
+  // fetchIsInstalled() {
+  //   window.postMessage({
+  //     target: "padoExtension",
+  //     origin: "padoZKAttestationJSSDK",
+  //     name: "checkIsInstalled",
+  //   });
+  //   console.time('myTimer')
+  //   return new Promise((resolve) => {
+  //     const tickerTimer = setTimeout(() => {
+  //       this.isInstalled = false
+  //       console.log('Please install the Pado extension first!')
+  //       resolve(false)
+  //     },500)
+  //     window.addEventListener("message", async (event) => {
+  //       const { target, name } = event.data;
+  //       if (target === "padoZKAttestationJSSDK") {
+  //         if (name === "checkIsInstalledRes") {
+  //           console.timeEnd('myTimer')
+  //           tickerTimer && clearTimeout(tickerTimer)
+  //           console.log('333 sdk receive checkIsInstalledRes')
+  //           this.isInstalled = true
+  //           resolve(true)
+  //         }
+  //       }
+  //     });
+  //   });
+  // }
   initAttestation() {
     window.postMessage({
       target: "padoExtension",
       origin: "padoZKAttestationJSSDK",
-      name: "initAttest",
+      name: "checkIsInstalled",
     });
-    return new Promise((resolve,) => {
-      window.addEventListener("message", (event) => {
+    console.time('checkIsInstalledCost')
+    console.time('initAttestCost')
+    return new Promise((resolve) => {
+      const tickerTimer = setTimeout(() => {
+        if (!this.isInstalled) {
+          console.log('Please install the Pado extension first!')
+          window?.removeEventListener('message', eventListener);
+          resolve(false)
+        }
+      }, 500)
+      const eventListener = (event:any) => {
         const { target, name } = event.data;
         if (target === "padoZKAttestationJSSDK") {
+          if (name === "checkIsInstalledRes") {
+            console.timeEnd('checkIsInstalledCost')
+            tickerTimer && clearTimeout(tickerTimer)
+            console.log('333 sdk receive checkIsInstalledRes')
+            this.isInstalled = true
+            window.postMessage({
+              target: "padoExtension",
+              origin: "padoZKAttestationJSSDK",
+              name: "initAttest",
+            });
+          }
           if (name === "initAttestRes") {
             console.log('333 sdk receive initAttestRes', event.data)
+            this.isInitialized = true
+            console.timeEnd('initAttestCost')
+            window?.removeEventListener('message', eventListener);
             resolve(true);
           }
         }
-      });
+      }
+      window.addEventListener("message", eventListener);
     });
   }
-  startAttestation() {
+  // initAttestation2() {
+  //   // if (!this.isInstalled) {
+  //   //   alert('Please install the Pado extension first!')
+  //   //   return
+  //   // }
+  //   window.postMessage({
+  //     target: "padoExtension",
+  //     origin: "padoZKAttestationJSSDK",
+  //     name: "initAttest",
+  //   });
+  //   return new Promise((resolve,) => {
+  //     window.addEventListener("message", (event) => {
+  //       const { target, name } = event.data;
+  //       if (target === "padoZKAttestationJSSDK") {
+  //         if (name === "initAttestRes") {
+  //           console.log('333 sdk receive initAttestRes', event.data)
+  //           this.isInitialized = true
+  //           resolve(true);
+  //         }
+  //       }
+  //     });
+  //   });
+  // }
+  startAttestation(attestationParams: AttestationParams, chainName: string, walletAddress: string) {
+    if (!this.isInitialized) {
+      alert('Please wait for the algorithm to initialize and try again！')
+      return
+    }
     window.postMessage({
       target: "padoExtension",
       origin: "padoZKAttestationJSSDK",
       name: "startAttest",
       params: {
-        attestationParams: this.attestationParams,
-        chainName: this.chainName,
-        walletAddress: this.walletAddress,
+        attestationParams,
+        chainName,
+        walletAddress,
       },
     });
-    return new Promise((resolve, reject) => {
+    console.time('startAttestCost')
+    return new Promise((resolve) => {
       let pollingTimer: any
       let timeoueTimer: any
-      window.addEventListener("message", async (event) => {
+      const eventListener = async (event:any) => {
         const { target, name, params } = event.data;
         if (target === "padoZKAttestationJSSDK") {
           if (name === "getAttestationRes") {
@@ -86,7 +165,6 @@ export default class ZkAttestationJSSDK {
                     name: "getAttestationResultTimeout",
                     params: {}
                   });
-                  // reject(false)
                 }
               }, ATTESTATIONPOLLINGTIMEOUT)
               pollingTimer = setInterval(() => {
@@ -98,7 +176,8 @@ export default class ZkAttestationJSSDK {
                 });
               }, ATTESTATIONPOLLINGTIME)
             } else {
-              reject(false)
+              window?.removeEventListener('message', eventListener);
+              resolve(false)
             }
             // const { retcode } = JSON.parse(params);
             // if (retcode === '0') {
@@ -147,25 +226,29 @@ export default class ZkAttestationJSSDK {
           // if (name === "getAttestationResultRes") {
           if (name === "startAttestationRes") {
             const { result, reStartFlag, attestationRequestId, eip712MessageRawDataWithSignature } = params
+
             console.log('333-sdk-receive getAttestationResultRes', params)
             if (result) {
               clearInterval(pollingTimer)
               clearTimeout(timeoueTimer)
-              this.attestationId = attestationRequestId
-              this.eip712Msg = eip712MessageRawDataWithSignature
-              resolve(Object.assign({attestationRequestId: this.attestationId}, this.eip712Msg))
+              console.timeEnd('startAttestCost')
+              window?.removeEventListener('message', eventListener);
+              resolve(Object.assign({attestationRequestId: attestationRequestId, chainName}, eip712MessageRawDataWithSignature))
             } else {
               if (reStartFlag) {
                 this.initAttestation()
               }
-              reject(false)
+              window?.removeEventListener('message', eventListener);
+              resolve(false)
             }
           }
         }
-      });
+      }
+      window.addEventListener("message",eventListener );
     });
   }
   verifyAttestation(eip712Msg: any) {
+    console.time('verifyAttestationCost')
     const { domain,message,signature,types } = eip712Msg
     delete domain.salt;
     const result = utils.verifyTypedData(
@@ -175,22 +258,30 @@ export default class ZkAttestationJSSDK {
       signature
     );
     console.log('333-sdk-Verification successful:', result);
+    console.timeEnd('verifyAttestationCost')
+
     const verifyResult = PADOADDRESS.toLowerCase() === result.toLowerCase();
     return verifyResult
   }
   async sendToChain(eip712Msg: any) {
-    const {attestationRequestId} = eip712Msg
+    // if (!this.isInstalled) {
+    //   alert('Please install the Pado extension first!')
+    //   return
+    // }
+    console.time('sendToChainCost')
     const onChainRes = await this._attestByDelegationProxyFee(eip712Msg)
-      window.postMessage({
-      target: "padoExtension",
-      origin: "padoZKAttestationJSSDK",
-      name: "sendToChainRes",
-      params: {
-        attestationRequestId,
-        chainName: this.chainName,
-        onChainRes
-      },
-    });
+    console.timeEnd('sendToChainCost')
+    // const {attestationRequestId, chainName} = eip712Msg
+    // window.postMessage({
+    //   target: "padoExtension",
+    //   origin: "padoZKAttestationJSSDK",
+    //   name: "sendToChainRes",
+    //   params: {
+    //     attestationRequestId,
+    //     chainName,
+    //     onChainRes
+    //   },
+    // });
     if (onChainRes) {
       if (onChainRes.error) {
         if (onChainRes.error === 1) {
@@ -202,78 +293,14 @@ export default class ZkAttestationJSSDK {
         }
         return;
       }
-      // chainName attestationRequestId onChainRes
       return true 
     } else {
       return false
-      // sendToChainResult = true;
-      // sendToChainMsg = 'Please try again later.';
-      // eventInfo.rawData = Object.assign(eventInfo.rawData, {
-      //   status: 'FAILED',
-      //   reason: 'attestByDelegationProxyFee error',
-      // });
-      // eventReport(eventInfo);
     }
   }
-  // verifyAttestation(attestationId: string) {
-  //   window.postMessage({
-  //     target: "padoExtension",
-  //     origin: "padoZKAttestationJSSDK",
-  //     name: "verifyAttestation",
-  //     params: {
-  //       attestationRequestId: attestationId,
-  //       chainName: this.chainName
-  //     },
-  //   });
-  //   return new Promise((resolve,reject) => {
-  //     window.addEventListener("message", async (event) => {
-  //       const { target, name, params } = event.data;
-  //       if (target === "padoZKAttestationJSSDK") {
-  //         if (name === "verifyAttestationRes") {
-  //           console.log('333 sdk receive verifyAttestationRes', params)
-  //           const { result } = params
-  //           if (result) {
-  //             resolve(true)
-  //           } else {
-  //             reject(false)
-  //           }
-  //         }
-  //       }
-  //     });
-  //   });
-  // }
-  // sendToChain(attestationId: string, walletObj: { provider: any, address: string }) {
-  //   window.postMessage({
-  //     target: "padoExtension",
-  //     origin: "padoZKAttestationJSSDK",
-  //     name: "sendToChain",
-  //     params: {
-  //       attestationRequestId: attestationId,
-  //       chainName: this.chainName,
-  //       walletObj
-  //     },
-  //   });
-  //   return new Promise((resolve, reject) => {
-  //     window.addEventListener("message", async (event) => {
-  //       const { target, name, params } = event.data;
-  //       if (target === "padoZKAttestationJSSDK") {
-  //         if (name === "sendToChainRes") {
-  //           console.log('333 sdk receive sendToChainRes', params)
-  //           const { result } = params
-  //           if (result) {
-  //             resolve(true)
-  //           } else {
-  //             reject(false)
-  //           }
-  //         }
-  //       }
-  //     });
-  //   });
-  // }
-
-  async _getFee() {
+  async _getFee(chainName: string) {
     // @ts-ignore
-    const contractAddress = EASInfo[this.chainName].easProxyFeeContract;
+    const contractAddress = EASInfo[chainName].easProxyFeeContract;
     const abi = ['function fee() public view returns(uint256)'];
     // @ts-ignore
     let provider = new ethers.providers.Web3Provider(window.ethereum);
@@ -286,15 +313,15 @@ export default class ZkAttestationJSSDK {
   async _attestByDelegationProxyFee(eip712Msg: any) {
     // @ts-ignore
     const metamaskprovider = window.ethereum
-    const networkName = this.chainName
+    const {chainName} = eip712Msg
     const { message: { data, recipient, schema }, signature } = eip712Msg
     // @ts-ignore
-    const easProxyFeeContractAddress = EASInfo[networkName].easProxyFeeContract;
+    const easProxyFeeContractAddress = EASInfo[chainName].easProxyFeeContract;
     let provider = new ethers.providers.Web3Provider(metamaskprovider);
     await provider.send('eth_requestAccounts', []);
     let signer = provider.getSigner();
     let contract;
-    if (networkName.startsWith('Linea') || networkName.indexOf('Scroll') > -1) {
+    if (chainName.startsWith('Linea') || chainName.indexOf('Scroll') > -1) {
       contract = new ethers.Contract(
         easProxyFeeContractAddress,
         lineaportalabi,
@@ -313,7 +340,7 @@ export default class ZkAttestationJSSDK {
       schema,
       easProxyFeeContractAddress
     );
-    const fee = await this._getFee();
+    const fee = await this._getFee(chainName);
     const paramsobj = {
       schema,
       data: {
@@ -329,7 +356,7 @@ export default class ZkAttestationJSSDK {
       deadline: 0,
     };
     try {
-      if (networkName.startsWith('Linea') || networkName.indexOf('Scroll') > -1) {
+      if (chainName.startsWith('Linea') || chainName.indexOf('Scroll') > -1) {
         tx = await contract.attest(paramsobj, { value: fee });
       } else {
         tx = await contract.attestByDelegation(
@@ -342,8 +369,8 @@ export default class ZkAttestationJSSDK {
       console.log('222222eas attestByDelegationProxyFee attest failed', er);
       try {
         if (
-          networkName.startsWith('Linea') ||
-          networkName.indexOf('Scroll') > -1
+          chainName.startsWith('Linea') ||
+          chainName.indexOf('Scroll') > -1
         ) {
           tx = await contract.callStatic.attest(paramsobj, { value: fee });
         } else {
@@ -375,12 +402,12 @@ export default class ZkAttestationJSSDK {
     const txreceipt = await tx.wait();
     console.log('eas attestByDelegationProxyFee txreceipt=', txreceipt);
     if (
-      networkName.startsWith('Linea') ||
-      networkName.indexOf('Scroll') > -1
+      chainName.startsWith('Linea') ||
+      chainName.indexOf('Scroll') > -1
     )
     {
       return txreceipt.transactionHash;
-    } else if (networkName.indexOf('opBNB') > -1) {
+    } else if (chainName.indexOf('opBNB') > -1) {
       const data = txreceipt.logs[1].data;
       const res = defaultAbiCoder.decode(['uint64', 'string'], data);
       console.log(res[0]._hex);
@@ -392,12 +419,6 @@ export default class ZkAttestationJSSDK {
   }
 }
 
-// window.addEventListener("message", (event) => {
-//   const { target } = event.data;
-//   if (target === "padoZKAttestationJSSDK") {
-//     console.log("444-listen-message", event.data);
-//   }
-// });
 
 
 
