@@ -207,10 +207,10 @@ const EASINFOMAP = {
     },
   },
   production: {
-    'Linea Goerli': {
+    'Linea Mainnet': {
       showName: 'Linea',
       // icon: iconNetworkLinea,
-      title: 'Linea Goerli',
+      title: 'Linea Mainnet',
       rpcUrl:
         'https://linea-mainnet.infura.io/v3/b6bf7d3508c941499b10025c0776eaf8',
       erc721Contract: '',
@@ -401,29 +401,8 @@ const EASINFOMAP = {
       },
       transactionDetailUrl: 'https://scrollscan.com/tx',
     },
-
-   
-    Polygon: {
-      showName: 'Polygon',
-      // icon: iconPolygon,
-      title: 'Polygon',
-      disabled: true,
-      rpcUrl: 'https://polygon-rpc.com',
-      erc721Contract: '0x616bDF7E9041c6F76b0ff6dE9aF5DA2c88A9Ac98',
-      easContact: '',
-      easProxyContrac: '',
-      schemaUid: '',
-      schemaUidTokenHoldings: '',
-      chainId: '0x89', // numToHex
-      chainName: 'Polygon Mainnet',
-      rpcUrls: ['https://polygon-rpc.com'],
-      blockExplorerUrls: ['https://polygonscan.com/'],
-      nativeCurrency: {
-        name: 'MATIC',
-        symbol: 'MATIC',
-        decimals: 18,
-      },
-    },
   },
 };
 export const EASInfo = EASINFOMAP[CURENV];
+export const CHAINNAMELIST = Object.keys(EASINFOMAP[CURENV]);
+export const ATTESTATIONTYPEIDLIST = ['1', '2', '3', '4', '6', '9', '10', '11', '12', '15']
