@@ -404,5 +404,53 @@ const EASINFOMAP = {
   },
 };
 export const EASInfo = EASINFOMAP[CURENV];
-export const CHAINNAMELIST = Object.keys(EASINFOMAP[CURENV]);
-export const ATTESTATIONTYPEIDLIST = ['1', '2', '3', '4', '6', '9', '10', '11', '12', '15']
+export const CHAINNAMELIST = Object.keys(EASINFOMAP[CURENV]).map(i => ({
+  text: i,
+  value: i
+}));
+export const ATTESTATIONTYPEIDLIST = [
+  {
+    text: "binance kyc",
+    value: "1",
+  },
+  {
+    text: "binance account",
+    value: "2",
+  },
+  {
+    text: "x account",
+    value: "3",
+  },
+  {
+    text: "okx kyc",
+    value: "4",
+  },
+  // {
+  //   text: "ins account",
+  //   value: "5",
+  // },
+  {
+    text: "tiktok account",
+    value: "6",
+  },
+  {
+    text: "binance Assets Proof",
+    value: "9",
+  },
+  {
+    text: "binance Token Holding",
+    value: "10",
+  },
+  {
+    text: "okx Assets Proof",
+    value: "11",
+  },
+  {
+    text: "okx Token Holding",
+    value: "12",
+  },
+  {
+    text: "X Followers",
+    value: "15",
+  },
+]

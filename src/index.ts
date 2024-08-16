@@ -13,15 +13,21 @@ type AttestationParams = {
   assetsBalance?: string;
   followersCount?: string;
 }
+type chainOption = {
+  text: string;
+  value: string;
+}
 export default class ZkAttestationJSSDK {
   isInstalled?: boolean;
   isInitialized: boolean;
-  supportedChainNameList: string[]
+  supportedChainNameList: chainOption[]
+  supportedAttestationTypeList: chainOption[]
 
   constructor() {
     this.isInitialized = false
     this.isInstalled = false
     this.supportedChainNameList = CHAINNAMELIST
+    this.supportedAttestationTypeList = ATTESTATIONTYPEIDLIST
   }
 
   initAttestation() {
@@ -362,7 +368,9 @@ export default class ZkAttestationJSSDK {
   _verifyAttestationParams(attestationParams: AttestationParams) {
     console.log('333-sdk-_verifyAttestationParams', attestationParams)
     const { chainName, walletAddress, attestationTypeId, tokenSymbol, assetsBalance, followersCount } = attestationParams
-    if (!CHAINNAMELIST.includes(chainName)) {
+
+    const activeChainOption = this.supportedChainNameList.find(i => i.value === chainName)
+    if (!activeChainOption) {
       alert('Unsupported chainName!')
       return false;
     }
@@ -373,8 +381,9 @@ export default class ZkAttestationJSSDK {
       return false;
     }
 
-    if (!ATTESTATIONTYPEIDLIST.includes(attestationTypeId)) {
-      alert('Unsupported proof type ID!')
+    const activeAttestationTypeOption = this.supportedAttestationTypeList.find(i => i.value === attestationTypeId)
+    if (!activeAttestationTypeOption) {
+      alert('Unsupported attestationTypeId!')
       return false;
     }
 
