@@ -4,6 +4,7 @@ import { ZERO_BYTES32} from '@ethereum-attestation-service/eas-sdk';
 import { ATTESTATIONPOLLINGTIME, ATTESTATIONPOLLINGTIMEOUT, PADOADDRESS,EASInfo,CHAINNAMELIST,ATTESTATIONTYPEIDLIST } from "./config/constants";
 import { lineaportalabi } from './config/lineaportalabi';
 import { proxyabi } from './config/proxyabi';
+import { isValidNumericString,isValidLetterString ,isValidNumberString} from './utils'
 
 type AttestationParams = {
   chainName: string;
@@ -29,7 +30,16 @@ export default class ZkAttestationJSSDK {
     this.supportedChainNameList = CHAINNAMELIST
     this.supportedAttestationTypeList = ATTESTATIONTYPEIDLIST
   }
-
+  bindUnloadEvent() {
+    const beforeunloadFn = async () => {
+      window.postMessage({
+        target: "padoExtension",
+        origin: "padoZKAttestationJSSDK",
+        name: "stopOffscreen",
+      });
+    };
+    window.addEventListener('beforeunload', beforeunloadFn);
+  }
   initAttestation() {
     window.postMessage({
       target: "padoExtension",
@@ -37,7 +47,7 @@ export default class ZkAttestationJSSDK {
       name: "checkIsInstalled",
     });
     console.time('checkIsInstalledCost')
-    console.time('initAttestCost')
+    console.time('initAttestationCost')
     return new Promise((resolve) => {
       const tickerTimer = setTimeout(() => {
         if (!this.isInstalled) {
@@ -57,13 +67,13 @@ export default class ZkAttestationJSSDK {
             window.postMessage({
               target: "padoExtension",
               origin: "padoZKAttestationJSSDK",
-              name: "initAttest",
+              name: "initAttestation",
             });
           }
-          if (name === "initAttestRes") {
-            console.log('333 sdk receive initAttestRes', event.data)
+          if (name === "initAttestationRes") {
+            console.log('333 sdk receive initAttestationRes', event.data)
             this.isInitialized = true
-            console.timeEnd('initAttestCost')
+            console.timeEnd('initAttestationCost')
             window?.removeEventListener('message', eventListener);
             resolve(true);
           }
@@ -82,12 +92,16 @@ export default class ZkAttestationJSSDK {
       return
     }
     const initRes = await this.initAttestation()
+    const formatParams = { ...attestationParams }
+    if (formatParams['tokenSymbol']) {
+      formatParams['tokenSymbol'] = formatParams['tokenSymbol'].toUpperCase()
+    }
     if (initRes) {
       window.postMessage({
       target: "padoExtension",
       origin: "padoZKAttestationJSSDK",
-      name: "startAttest",
-      params: attestationParams,
+      name: "startAttestation",
+      params: formatParams,
        
     });
     console.time('startAttestCost')
@@ -139,6 +153,10 @@ export default class ZkAttestationJSSDK {
               if (reStartFlag) {
                 console.log('333-reStartFlag')
                 await this.initAttestation()
+              }
+              const { msgObj } = params
+              if (msgObj.desc) {
+                alert(msgObj.desc)
               }
               window?.removeEventListener('message', eventListener);
               resolve(false)
@@ -387,21 +405,45 @@ export default class ZkAttestationJSSDK {
       return false;
     }
 
-    if (['9', '11'].includes(attestationTypeId) && !assetsBalance) {
-      alert('Missing assetsBalance parameter!')
-      return false;
+    if (['9', '11'].includes(attestationTypeId)) {
+      if (!assetsBalance) {
+        alert('Missing assetsBalance parameter!')
+        return false;
+      } else {
+        const valid = isValidNumberString(assetsBalance)
+        alert('The parameter "assetsBalance" is incorrect.')
+        if (!valid) {
+          return false
+        }
+      }
     }
 
     // binance Token Holding ,okx Token Holding
-    if (['10', '12'].includes(attestationTypeId) && !tokenSymbol) {
-      alert('Missing tokenSymbol parameter!')
+    if (['10', '12'].includes(attestationTypeId)) {
+      if (!tokenSymbol) {
+        alert('Missing tokenSymbol parameter!')
       return false;
+      } else {
+        const valid = isValidLetterString(tokenSymbol)
+        alert('The parameter "tokenSymbol" is incorrect.')
+        if (!valid) {
+          return false
+        }
+      }
     }
 
     // X Followers
-    if (['15'].includes(attestationTypeId) && !followersCount) {
-      alert('Missing followersCount parameter!')
-      return false;
+    if (['15'].includes(attestationTypeId)) {
+       if (!followersCount) {
+        alert('Missing followersCount parameter!')
+        return false;
+      } else {
+        const valid = isValidNumericString(followersCount)
+        alert('The parameter "followersCount" is incorrect.')
+        if (!valid) {
+          return false
+        }
+      }
     }
     
     return true
