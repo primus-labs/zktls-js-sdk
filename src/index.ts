@@ -1,46 +1,26 @@
 import { ethers, utils } from 'ethers';
 import { defaultAbiCoder } from 'ethers/lib/utils';
-import { ZERO_BYTES32} from '@ethereum-attestation-service/eas-sdk';
-import { ATTESTATIONPOLLINGTIME, ATTESTATIONPOLLINGTIMEOUT, PADOADDRESS,EASInfo,CHAINNAMELIST,ATTESTATIONTYPEIDLIST } from "./config/constants";
+import { ZERO_BYTES32 } from '@ethereum-attestation-service/eas-sdk';
+import { ATTESTATIONPOLLINGTIME, ATTESTATIONPOLLINGTIMEOUT, PADOADDRESS, EASInfo, CHAINNAMELIST, ATTESTATIONTYPEIDLIST } from "./config/constants";
 import { lineaportalabi } from './config/lineaportalabi';
 import { proxyabi } from './config/proxyabi';
-import { isValidNumericString,isValidLetterString ,isValidNumberString} from './utils'
+import { isValidNumericString, isValidLetterString, isValidNumberString } from './utils'
+import { AttestationParams, ChainOption, StartAttestationReturnParams,Eip712Msg } from './index.d'
 
-type AttestationParams = {
-  chainName: string;
-  walletAddress: string;
-  attestationTypeId: string;
-  tokenSymbol?: string;
-  assetsBalance?: string;
-  followersCount?: string;
-}
-type chainOption = {
-  text: string;
-  value: string;
-}
 export default class ZkAttestationJSSDK {
   isInstalled?: boolean;
   isInitialized: boolean;
-  supportedChainNameList: chainOption[]
-  supportedAttestationTypeList: chainOption[]
+  supportedChainNameList: ChainOption[]
+  supportedAttestationTypeList: ChainOption[]
 
   constructor() {
     this.isInitialized = false
     this.isInstalled = false
     this.supportedChainNameList = CHAINNAMELIST
     this.supportedAttestationTypeList = ATTESTATIONTYPEIDLIST
+    // this._bindUnloadEvent()
   }
-  bindUnloadEvent() {
-    const beforeunloadFn = async () => {
-      window.postMessage({
-        target: "padoExtension",
-        origin: "padoZKAttestationJSSDK",
-        name: "stopOffscreen",
-      });
-    };
-    window.addEventListener('beforeunload', beforeunloadFn);
-  }
-  initAttestation() {
+  initAttestation(): Promise<boolean> {
     window.postMessage({
       target: "padoExtension",
       origin: "padoZKAttestationJSSDK",
@@ -56,7 +36,7 @@ export default class ZkAttestationJSSDK {
           resolve(false)
         }
       }, 500)
-      const eventListener = (event:any) => {
+      const eventListener = (event: any) => {
         const { target, name } = event.data;
         if (target === "padoZKAttestationJSSDK") {
           if (name === "checkIsInstalledRes") {
@@ -82,8 +62,10 @@ export default class ZkAttestationJSSDK {
       window.addEventListener("message", eventListener);
     });
   }
-  
-  async startAttestation(attestationParams: AttestationParams) {
+
+  async startAttestation(attestationParams: AttestationParams): Promise<StartAttestationReturnParams | boolean> {
+    const vaild = this._verifyAttestationParams(attestationParams)
+    console.log('333valid', vaild)
     if (!this._verifyAttestationParams(attestationParams)) {
       return
     }
@@ -98,100 +80,91 @@ export default class ZkAttestationJSSDK {
     }
     if (initRes) {
       window.postMessage({
-      target: "padoExtension",
-      origin: "padoZKAttestationJSSDK",
-      name: "startAttestation",
-      params: formatParams,
-       
-    });
-    console.time('startAttestCost')
-    return new Promise((resolve) => {
-      let pollingTimer: any
-      let timeoueTimer: any
-      const eventListener = async (event:any) => {
-        const { target, name, params } = event.data;
-        if (target === "padoZKAttestationJSSDK") {
-          if (name === "getAttestationRes") {
-            console.log('333 sdk receive getAttestationRes', params)
-            const { result } = params
-            if (result) {
-              timeoueTimer = setTimeout(() => {
-                if (pollingTimer) {
-                  clearInterval(pollingTimer)
+        target: "padoExtension",
+        origin: "padoZKAttestationJSSDK",
+        name: "startAttestation",
+        params: formatParams,
+
+      });
+      console.time('startAttestCost')
+      return new Promise((resolve) => {
+        let pollingTimer: any
+        let timeoutTimer: any
+        const eventListener = async (event: any) => {
+          const { target, name, params } = event.data;
+          if (target === "padoZKAttestationJSSDK") {
+            if (name === "getAttestationRes") {
+              console.log('333 sdk receive getAttestationRes', params)
+              const { result, msgObj } = params
+              if (result) {
+                timeoutTimer = setTimeout(() => {
+                  if (pollingTimer) {
+                    clearInterval(pollingTimer)
+                    window.postMessage({
+                      target: "padoExtension",
+                      origin: "padoZKAttestationJSSDK",
+                      name: "getAttestationResultTimeout",
+                      params: {}
+                    });
+                  }
+                }, ATTESTATIONPOLLINGTIMEOUT)
+                pollingTimer = setInterval(() => {
                   window.postMessage({
                     target: "padoExtension",
                     origin: "padoZKAttestationJSSDK",
-                    name: "getAttestationResultTimeout",
+                    name: "getAttestationResult",
                     params: {}
                   });
+                }, ATTESTATIONPOLLINGTIME)
+              } else {
+                if (msgObj?.desc) {
+                  alert(msgObj.desc)
                 }
-              }, ATTESTATIONPOLLINGTIMEOUT)
-              pollingTimer = setInterval(() => {
-                window.postMessage({
-                  target: "padoExtension",
-                  origin: "padoZKAttestationJSSDK",
-                  name: "getAttestationResult",
-                  params: {}
-                });
-              }, ATTESTATIONPOLLINGTIME)
-            } else {
-              window?.removeEventListener('message', eventListener);
-              resolve(false)
+                window?.removeEventListener('message', eventListener);
+                resolve(false)
+              }
             }
-          }
-          if (name === "startAttestationRes") {
-            const { result, reStartFlag, attestationRequestId, eip712MessageRawDataWithSignature } = params
+            if (name === "startAttestationRes") {
+              const { result, reStartFlag, attestationRequestId, eip712MessageRawDataWithSignature, msgObj } = params
 
-            console.log('333-sdk-receive getAttestationResultRes', params)
-            if (result) {
-              clearInterval(pollingTimer)
-              clearTimeout(timeoueTimer)
-              console.timeEnd('startAttestCost')
-              window?.removeEventListener('message', eventListener);
-              resolve(Object.assign({attestationRequestId: attestationRequestId, chainName: attestationParams.chainName}, eip712MessageRawDataWithSignature))
-            } else {
-              if (reStartFlag) {
-                console.log('333-reStartFlag')
-                await this.initAttestation()
+              console.log('333-sdk-receive getAttestationResultRes', params)
+              if (result) {
+                clearInterval(pollingTimer)
+                clearTimeout(timeoutTimer)
+                console.timeEnd('startAttestCost')
+                window?.removeEventListener('message', eventListener);
+                resolve(Object.assign({ attestationRequestId: attestationRequestId, chainName: attestationParams.chainName }, eip712MessageRawDataWithSignature))
+              } else {
+                clearInterval(pollingTimer)
+                clearTimeout(timeoutTimer)
+                console.timeEnd('startAttestCost')
+                if (reStartFlag) {
+                  console.log('333-reStartFlag')
+                  await this.initAttestation()
+                }
+                console.log('333-msgObj')
+                if (msgObj?.desc) {
+                  alert(msgObj.desc)
+                }
+                window?.removeEventListener('message', eventListener);
+                resolve(false)
               }
-              const { msgObj } = params
-              if (msgObj.desc) {
-                alert(msgObj.desc)
-              }
-              window?.removeEventListener('message', eventListener);
-              resolve(false)
             }
           }
         }
-      }
-      window.addEventListener("message",eventListener );
-    });
+        window.addEventListener("message", eventListener);
+      });
     } else {
       return false
     }
   }
-  verifyAttestation(eip712Msg: any) {
-    console.time('verifyAttestationCost')
-    const { domain,message,signature,types } = eip712Msg
-    delete domain.salt;
-    const result = utils.verifyTypedData(
-      domain,
-      types,
-      message,
-      signature
-    );
-    console.log('333-sdk-Verification successful:', result);
-    console.timeEnd('verifyAttestationCost')
-
-    const verifyResult = PADOADDRESS.toLowerCase() === result.toLowerCase();
-    return verifyResult
-  }
-  async sendToChain(eip712Msg: any) {
+  
+  async sendToChain(eip712Msg: StartAttestationReturnParams): Promise<boolean> {
     // if (!this.isInstalled) {
     //   alert('Please install the Pado extension first!')
     //   return
     // }
-    const chainObj = (EASInfo as {[key: string]: any})[eip712Msg.chainName]
+    const chainObj = (EASInfo as { [key: string]: any })[eip712Msg.chainName]
     await this._switchChain(chainObj)
     console.time('sendToChainCost')
     const onChainRes = await this._attestByDelegationProxyFee(eip712Msg, chainObj)
@@ -216,14 +189,31 @@ export default class ZkAttestationJSSDK {
           alert('Please try again later.');
           return false
         }
-        return;
+        return false;
       }
-      return true 
+      return true
     } else {
       return false
     }
   }
-  async _getFee(chainName: string) {
+  verifyAttestation(eip712Msg: StartAttestationReturnParams): boolean {
+    console.time('verifyAttestationCost')
+    const { domain, message, signature, types } = eip712Msg
+    let formatDomain:any = {...domain}
+    delete formatDomain.salt;
+    const result = utils.verifyTypedData(
+      formatDomain,
+      types,
+      message,
+      signature
+    );
+    console.log('333-sdk-Verification successful:', result);
+    console.timeEnd('verifyAttestationCost')
+
+    const verifyResult = PADOADDRESS.toLowerCase() === result.toLowerCase();
+    return verifyResult
+  }
+  async _getFee(chainName: string): Promise<any> {
     // @ts-ignore
     const contractAddress = EASInfo[chainName].easProxyFeeContract;
     const abi = ['function fee() public view returns(uint256)'];
@@ -234,9 +224,9 @@ export default class ZkAttestationJSSDK {
     console.log('get fee=', fee);
     return fee;
   }
-  async _attestByDelegationProxyFee(eip712Msg: any, chainObj: any) {
+  async _attestByDelegationProxyFee(eip712Msg: any, chainObj: any): Promise<any> {
     const metamaskprovider = (window as any).ethereum
-    const {chainName} = eip712Msg
+    const { chainName } = eip712Msg
     const { message: { data, recipient, schema }, signature } = eip712Msg
     const easProxyFeeContractAddress = chainObj.easProxyFeeContract;
     let provider = new ethers.providers.Web3Provider(metamaskprovider);
@@ -326,8 +316,7 @@ export default class ZkAttestationJSSDK {
     if (
       chainName.startsWith('Linea') ||
       chainName.indexOf('Scroll') > -1
-    )
-    {
+    ) {
       return txreceipt.transactionHash;
     } else if (chainName.indexOf('opBNB') > -1) {
       const data = txreceipt.logs[1].data;
@@ -339,7 +328,7 @@ export default class ZkAttestationJSSDK {
       return newAttestationUID;
     }
   }
-  
+
   async _switchChain(chainObj: any) {
     const { chainId, chainName: formatChainName, rpcUrls, blockExplorerUrls, nativeCurrency } = chainObj
     const provider = (window as any).ethereum
@@ -365,7 +354,7 @@ export default class ZkAttestationJSSDK {
         params: [{ chainId }],
       });
       return true;
-    } catch (err:any) {
+    } catch (err: any) {
       if (err.code === 4902) {
         try {
           // add network
@@ -383,7 +372,7 @@ export default class ZkAttestationJSSDK {
     }
   };
 
-  _verifyAttestationParams(attestationParams: AttestationParams) {
+  _verifyAttestationParams(attestationParams: AttestationParams): boolean {
     console.log('333-sdk-_verifyAttestationParams', attestationParams)
     const { chainName, walletAddress, attestationTypeId, tokenSymbol, assetsBalance, followersCount } = attestationParams
 
@@ -392,7 +381,7 @@ export default class ZkAttestationJSSDK {
       alert('Unsupported chainName!')
       return false;
     }
-    
+
     const isAddressVaild = utils.isAddress(walletAddress)
     if (!isAddressVaild) {
       alert('The wallet address is incorrect!')
@@ -411,8 +400,9 @@ export default class ZkAttestationJSSDK {
         return false;
       } else {
         const valid = isValidNumberString(assetsBalance)
-        alert('The parameter "assetsBalance" is incorrect.')
         if (!valid) {
+          console.log('333-assetsBalance', isValidNumberString(assetsBalance))
+          alert('The parameter "assetsBalance" is incorrect, Supports numbers with up to 6 decimal places.')
           return false
         }
       }
@@ -422,11 +412,12 @@ export default class ZkAttestationJSSDK {
     if (['10', '12'].includes(attestationTypeId)) {
       if (!tokenSymbol) {
         alert('Missing tokenSymbol parameter!')
-      return false;
+        return false;
       } else {
         const valid = isValidLetterString(tokenSymbol)
-        alert('The parameter "tokenSymbol" is incorrect.')
         if (!valid) {
+          console.log('333-tokenSymbol', isValidLetterString(tokenSymbol))
+          alert('The parameter "tokenSymbol" is incorrect, Support both uppercase and lowercase letters in English.')
           return false
         }
       }
@@ -434,20 +425,32 @@ export default class ZkAttestationJSSDK {
 
     // X Followers
     if (['15'].includes(attestationTypeId)) {
-       if (!followersCount) {
+      if (!followersCount) {
         alert('Missing followersCount parameter!')
         return false;
       } else {
         const valid = isValidNumericString(followersCount)
-        alert('The parameter "followersCount" is incorrect.')
         if (!valid) {
+          console.log('333-followersCount', isValidNumericString(followersCount))
+          alert('The parameter "followersCount" is incorrect. Supports numbers only.')
           return false
         }
       }
     }
-    
+
     return true
   }
+
+  // _bindUnloadEvent() {
+  //   const beforeunloadFn = async () => {
+  //     window.postMessage({
+  //       target: "padoExtension",
+  //       origin: "padoZKAttestationJSSDK",
+  //       name: "stopOffscreen",
+  //     });
+  //   };
+  //   window.addEventListener('beforeunload', beforeunloadFn);
+  // }
 }
 
 
