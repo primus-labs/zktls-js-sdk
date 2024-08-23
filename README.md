@@ -87,42 +87,41 @@ console.log(myInstance.supportedChainNameList); // Outputs the list of supported
 ```
 ### 5.Generate a Proof Use the generateProof method to generate a zero-knowledge proof.
 
-- it is worth noting that startAttestation can only be called after successful initialization
-- All proof types require passing in three parameters: chainName, walletAddress, and attestationTypeId. Your parameter should look like this `{
-      chainName: "BSC",
-      walletAddress: "0x",
-      attestationTypeId: "1",
-    }`
-- When you your proof type is Binance Assets Proof or OKX Assets Proof, remember to pass in the assetsBalance parameter, which is in yuan and supports a minimum of 0.000001. Your parameter should look like this `{
-      chainName: "BSC",
-      walletAddress: "0x",
-      attestationTypeId: "11",
-      assetsBalance: "0.1",
-    }`
-- When your proof type is Binance Token Holding or OKX Token Holding, remember to pass in the tokenSymbol parameter. Your parameter should look like this `{
-      chainName: "BSC",
-      walletAddress: "0x",
-      attestationTypeId: "12",
-      tokenSymbol: "USDT",
-    }`
-- When your proof type is X Followers, remember to pass in the followersCount parameter. Your parameter should look like this `{
-      chainName: "BSC",
-      walletAddress: "0x",
-      attestationTypeId: "15",
-      followersCount: "1",
-    }`
 
 **Parameters**
 
 - `attestationParams: AttestationParams` Information required to initiate the attestation.
-
+  - it is worth noting that startAttestation can only be called after successful initialization
+  - All proof types require passing in three parameters: chainName, walletAddress, and attestationTypeId. Your parameter should look like this `{
+        chainName: "BSC",
+        walletAddress: "0x",
+        attestationTypeId: "1",
+      }`
+  - When you your proof type is Binance Assets Proof or OKX Assets Proof, remember to pass in the assetsBalance parameter, which is in yuan and supports a minimum of 0.000001. Your parameter should look like this `{
+        chainName: "BSC",
+        walletAddress: "0x",
+        attestationTypeId: "11",
+        assetsBalance: "0.1",
+      }`
+  - When your proof type is Binance Token Holding or OKX Token Holding, remember to pass in the tokenSymbol parameter. Your parameter should look like this `{
+        chainName: "BSC",
+        walletAddress: "0x",
+        attestationTypeId: "12",
+        tokenSymbol: "USDT",
+      }`
+  - When your proof type is X Followers, remember to pass in the followersCount parameter. Your parameter should look like this `{
+        chainName: "BSC",
+        walletAddress: "0x",
+        attestationTypeId: "15",
+        followersCount: "1",
+      }`
 **Return Value**
 
 - `Promise<StartAttestationReturnParams>` Returns a Promise StartAttestationReturnParams resolves when the attestation is successful or Returns false when the attestation is failed.
 
 ```javascript
   async  function generateProof(proof) {
-    // Generate a proof of binance account assets>1 USD
+    // Generate a proof of binance account assets balance >1 USD
     const startAttestationReturnValue = await myInstance.startAttestation({
       chainName: "BSC",
       walletAddress: "0x",
