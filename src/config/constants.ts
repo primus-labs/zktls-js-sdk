@@ -422,13 +422,13 @@ export const EASInfo = EASINFOMAP[CURENV];
 //   value: parseInt(i.chainId)
 // }));
 
-export const CHAINNAMELISTONALLENV = Object.values(EASINFOMAP).reduce((prev, curr) => {
-  const arr = Object.values(curr).map((i: any) => ({
-    text: i.officialName,
-    value: parseInt(i.chainId)
-  }))
-  return prev.concat(arr as any)
-},[])
+// export const CHAINNAMELISTONALLENV = Object.values(EASINFOMAP).reduce((prev, curr) => {
+//   const arr = Object.values(curr).map((i: any) => ({
+//     text: i.officialName,
+//     value: parseInt(i.chainId)
+//   }))
+//   return prev.concat(arr as any)
+// },[])
 export const ATTESTATIONTYPEIDLIST = [
   {
     text: "binance kyc",

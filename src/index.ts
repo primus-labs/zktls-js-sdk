@@ -1,7 +1,7 @@
 import { ethers, utils } from 'ethers';
 import { defaultAbiCoder } from 'ethers/lib/utils';
 import { ZERO_BYTES32 } from '@ethereum-attestation-service/eas-sdk';
-import { ATTESTATIONPOLLINGTIME, ATTESTATIONPOLLINGTIMEOUT, ATTESTATIONTYPEIDLIST ,CHAINNAMELISTONALLENV, PADOADDRESSMAP,EASINFOMAP} from "./config/constants";
+import { ATTESTATIONPOLLINGTIME, ATTESTATIONPOLLINGTIMEOUT, ATTESTATIONTYPEIDLIST, PADOADDRESSMAP,EASINFOMAP} from "./config/constants";
 import { lineaportalabi } from './config/lineaportalabi';
 import { proxyabi } from './config/proxyabi';
 import { isValidNumericString, isValidLetterString, isValidNumberString } from './utils'
@@ -11,6 +11,7 @@ export default class ZkAttestationJSSDK {
   private _env: Env;
   private _dappName: string;
   private _padoAddress: string;
+  private _easInfo: any;
   isInstalled?: boolean;
   isInitialized: boolean;
   supportedChainNameList: ChainOption[]
@@ -24,11 +25,13 @@ export default class ZkAttestationJSSDK {
     } else {
       this._env = 'production'
     }
+    console.log('333-sdk-env:',this._env )
     this.supportedChainNameList = Object.values(EASINFOMAP[this._env]).map((i:any) => ({
       text: i.officialName,
       value: parseInt(i.chainId)
     }));
     this._padoAddress = PADOADDRESSMAP[this._env]
+    this._easInfo = EASINFOMAP[this._env]
     this.supportedAttestationTypeList = ATTESTATIONTYPEIDLIST
     this._dappName = ''
     this._bindUnloadEvent()
@@ -101,7 +104,7 @@ export default class ZkAttestationJSSDK {
         formatParams['tokenSymbol'] = formatParams['tokenSymbol'].toUpperCase()
       }
       if (formatParams['chainId']) {
-        const chainMetaInfo = Object.values(EASInfo).find(i => formatParams['chainId'] === parseInt(i.chainId))
+        const chainMetaInfo = Object.values(this._easInfo).find((i:any) => formatParams['chainId'] === parseInt(i.chainId))
         formatParams['chainName'] = (chainMetaInfo as any).title
       }
       
@@ -193,8 +196,8 @@ export default class ZkAttestationJSSDK {
     }
     try {
       const { chainName } = startAttestationReturnParams
-      const chainObj = (EASInfo as { [key: string]: any })[chainName]
-      console.log('333-sdk-chainObj',startAttestationReturnParams,chainName, EASInfo, chainObj)
+      const chainObj = (this._easInfo as { [key: string]: any })[chainName]
+      console.log('333-sdk-chainObj',startAttestationReturnParams,chainName, this._easInfo, chainObj)
       await this._switchChain(chainObj, wallet)
       console.time('sendToChainCost')
       const onChainRes = await this._attestByDelegationProxyFee(startAttestationReturnParams, chainObj, wallet)
@@ -247,7 +250,7 @@ export default class ZkAttestationJSSDK {
     return verifyResult
   }
   async _getFee(chainName: string, wallet: any): Promise<any> {
-    const contractAddress = (EASInfo  as { [key: string]: any })[chainName].easProxyFeeContract;
+    const contractAddress = (this._easInfo  as { [key: string]: any })[chainName].easProxyFeeContract;
     const abi = ['function fee() public view returns(uint256)'];
     let provider = new ethers.providers.Web3Provider(wallet);
     const contract = new ethers.Contract(contractAddress, abi, provider);
@@ -296,7 +299,7 @@ export default class ZkAttestationJSSDK {
         value: 0,
       },
       signature,
-      attester: PADOADDRESS,
+      attester: this._padoAddress,
       deadline: 0,
     };
     try {
