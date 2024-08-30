@@ -17,6 +17,7 @@ export const PADOADDRESS = PADOADDRESSMAP[CURENV];
 const EASINFOMAP = {
   development: {
     'Scroll Sepolia': {
+      officialName: 'Scroll Sepolia Testnet',
       showName: 'Scroll',
       // icon: iconNetworkScroll,
       title: 'Scroll Sepolia',
@@ -57,6 +58,7 @@ const EASINFOMAP = {
       transactionDetailUrl: 'https://sepolia.scrollscan.com/tx',
     },
     'Linea Goerli': {
+      officialName:'Linea Goerli',
       showName: 'Linea',
       // icon: iconNetworkLinea,
       title: 'Linea Goerli',
@@ -100,6 +102,7 @@ const EASINFOMAP = {
       transactionDetailUrl: 'https://goerli.lineascan.build/tx',
     },
     Sepolia: {
+      officialName:'Sepolia',
       showName: 'Sepolia',
       // icon: iconUpChainEthereum,
       title: 'Sepolia',
@@ -142,6 +145,7 @@ const EASINFOMAP = {
       transactionDetailUrl: 'https://sepolia.easscan.org/attestation/view',
     },
     BSC: {
+      officialName:'BNB Smart Chain Testnet',
       showName: 'BNB Chain',
       // icon: iconBinance,
       title: 'BSC',
@@ -175,6 +179,7 @@ const EASINFOMAP = {
     },
     
     opBNB: {
+      officialName:'opBNB Testnet',
       showName: 'opBNB',
       // icon: iconBinance,
       title: 'opBNB',
@@ -211,6 +216,7 @@ const EASINFOMAP = {
   },
   production: {
     'Linea Mainnet': {
+      officialName:'Linea',
       showName: 'Linea',
       // icon: iconNetworkLinea,
       title: 'Linea Mainnet',
@@ -254,6 +260,7 @@ const EASINFOMAP = {
       transactionDetailUrl: 'https://lineascan.build/tx',
     },
     BSC: {
+      officialName:'BNB Smart Chain Mainnet',
       showName: 'BNB Chain',
       // icon: iconBinance,
       title: 'BSC',
@@ -292,6 +299,7 @@ const EASINFOMAP = {
       transactionDetailUrl: 'https://www.bascan.io/attestation',
     },
     opBNB: {
+      officialName:'opBNB Mainnet',
       showName: 'opBNB',
       // icon: iconBinance,
       title: 'opBNB',
@@ -325,6 +333,7 @@ const EASINFOMAP = {
       bucketDetailUrl: 'https://scan.sign.global/attestation/onchain_evm_204_',
     },
     Arbitrum: {
+      officialName:'Arbitrum One',
       showName: 'Arbitrum',
       // icon: iconArbitrum,
       title: 'Arbitrum', // ArbitrumOne
@@ -365,6 +374,7 @@ const EASINFOMAP = {
       transactionDetailUrl: 'https://arbitrum.easscan.org/attestation/view',
     },
     'Scroll Mainnet': {
+      officialName:'Scroll',
       showName: 'Scroll',
       // icon: iconNetworkScroll,
       title: 'Scroll Mainnet',
@@ -407,9 +417,9 @@ const EASINFOMAP = {
   },
 };
 export const EASInfo = EASINFOMAP[CURENV];
-export const CHAINNAMELIST = Object.keys(EASINFOMAP[CURENV]).map(i => ({
-  text: i,
-  value: i
+export const CHAINNAMELIST = Object.keys(EASINFOMAP[CURENV]).map((i:any) => ({
+  text: i.officialName,
+  value: parseInt(i.chainId)
 }));
 export const ATTESTATIONTYPEIDLIST = [
   {

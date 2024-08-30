@@ -5,14 +5,14 @@ import { ATTESTATIONPOLLINGTIME, ATTESTATIONPOLLINGTIMEOUT, PADOADDRESS, EASInfo
 import { lineaportalabi } from './config/lineaportalabi';
 import { proxyabi } from './config/proxyabi';
 import { isValidNumericString, isValidLetterString, isValidNumberString } from './utils'
-import { AttestationParams, ChainOption, StartAttestationReturnParams} from './index.d'
+import { AttestationParams, ChainOption, StartAttestationReturnParams,AttestationTypeOption} from './index.d'
 import { ZkAttestationError } from './error'
 export default class ZkAttestationJSSDK {
   private _dappName: string;
   isInstalled?: boolean;
   isInitialized: boolean;
   supportedChainNameList: ChainOption[]
-  supportedAttestationTypeList: ChainOption[]
+  supportedAttestationTypeList: AttestationTypeOption[]
 
   constructor() {
     this.isInitialized = false
@@ -85,9 +85,13 @@ export default class ZkAttestationJSSDK {
       const vaildResult = this._verifyAttestationParams(attestationParams)
       console.log('333-sdk-startAttestation-vaildResult', vaildResult)
       await this.initAttestation(this._dappName)
-      const formatParams = { ...attestationParams, dappName:this._dappName }
+      let formatParams:any = { ...attestationParams, dappName:this._dappName }
       if (formatParams['tokenSymbol']) {
         formatParams['tokenSymbol'] = formatParams['tokenSymbol'].toUpperCase()
+      }
+      if (formatParams['chainId']) {
+        const chainMetaInfo = Object.values(EASInfo).find(i => formatParams['chainId'] === parseInt(i.chainId))
+        formatParams['chainName'] = (chainMetaInfo as any).title
       }
       
       window.postMessage({
@@ -140,11 +144,11 @@ export default class ZkAttestationJSSDK {
                 clearTimeout(timeoutTimer)
                 console.timeEnd('startAttestCost')
                 window?.removeEventListener('message', eventListener);
-                const formatParams = { ...data, chainName: attestationParams.chainName }
+                const formatParams2 = { ...data, chainName: formatParams.chainName }
                 // formatParams={chianName:'',
                 // attestationRequestId: activeRequestId,
                 // eip712MessageRawDataWithSignature,}
-                resolve(formatParams)
+                resolve(formatParams2)
               } else {
                 clearInterval(pollingTimer)
                 clearTimeout(timeoutTimer)
@@ -389,8 +393,8 @@ export default class ZkAttestationJSSDK {
   };
 
   _verifyAttestationParams(attestationParams: AttestationParams): boolean {
-    const { chainName, walletAddress, attestationTypeId, tokenSymbol, assetsBalance, followersCount } = attestationParams
-    const activeChainOption = this.supportedChainNameList.find(i => i.value === chainName)
+    const { chainId, walletAddress, attestationTypeId, tokenSymbol, assetsBalance, followersCount } = attestationParams
+    const activeChainOption = this.supportedChainNameList.find(i => i.value === chainId)
     if (!activeChainOption) {
       throw new ZkAttestationError('00005','Unsupported chainName!')
     }

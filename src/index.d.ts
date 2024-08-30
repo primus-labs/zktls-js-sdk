@@ -1,5 +1,5 @@
 export type AttestationParams = {
-  chainName: string;
+  chainId: number;
   walletAddress: string;
   attestationTypeId: string;
   tokenSymbol?: string;
@@ -7,6 +7,10 @@ export type AttestationParams = {
   followersCount?: string;
 }
 export type ChainOption = {
+  text: string;
+  value: number;
+}
+export type AttestationTypeOption = {
   text: string;
   value: string;
 }
