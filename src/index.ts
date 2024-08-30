@@ -22,7 +22,7 @@ export default class ZkAttestationJSSDK {
     this._dappName = ''
     // this._bindUnloadEvent()
   }
-  initAttestation(dappName: string): Promise<void> {
+  initAttestation(dappName: string): Promise<boolean> {
     this._dappName = dappName
     window.postMessage({
       target: "padoExtension",
@@ -42,7 +42,7 @@ export default class ZkAttestationJSSDK {
         }
       }, 500)
       const eventListener = (event: any) => {
-        const { target, name } = event.data;
+        const { target, name, params } = event.data;
         if (target === "padoZKAttestationJSSDK") {
           if (name === "checkIsInstalledRes") {
             console.timeEnd('checkIsInstalledCost')
@@ -57,10 +57,17 @@ export default class ZkAttestationJSSDK {
           }
           if (name === "initAttestationRes") {
             console.log('333 sdk receive initAttestationRes', event.data)
-            this.isInitialized = true
-            console.timeEnd('initAttestationCost')
-            window?.removeEventListener('message', eventListener);
-            resolve();
+            const { result, errorData } = params
+            if (result) {
+              this.isInitialized = params?.result
+              console.timeEnd('initAttestationCost')
+              window?.removeEventListener('message', eventListener);
+              resolve(true);
+            } else {
+              window?.removeEventListener('message', eventListener);
+              const { desc, code } = errorData
+              reject(new ZkAttestationError(code,desc))
+            }
           }
         }
       }
@@ -144,7 +151,7 @@ export default class ZkAttestationJSSDK {
                 console.timeEnd('startAttestCost')
                 if (reStartFlag) {
                   console.log('333-reStartFlag')
-                  await this.initAttestation()
+                  await this.initAttestation(this._dappName)
                 }
                 window?.removeEventListener('message', eventListener);
                 const { desc, code } = errorData
