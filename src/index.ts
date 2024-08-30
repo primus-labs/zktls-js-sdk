@@ -8,6 +8,7 @@ import { isValidNumericString, isValidLetterString, isValidNumberString } from '
 import { AttestationParams, ChainOption, StartAttestationReturnParams} from './index.d'
 import { ZkAttestationError } from './error'
 export default class ZkAttestationJSSDK {
+  private _dappName: string;
   isInstalled?: boolean;
   isInitialized: boolean;
   supportedChainNameList: ChainOption[]
@@ -18,9 +19,11 @@ export default class ZkAttestationJSSDK {
     this.isInstalled = false
     this.supportedChainNameList = CHAINNAMELIST
     this.supportedAttestationTypeList = ATTESTATIONTYPEIDLIST
+    this._dappName = ''
     // this._bindUnloadEvent()
   }
-  initAttestation(): Promise<void> {
+  initAttestation(dappName: string): Promise<void> {
+    this._dappName = dappName
     window.postMessage({
       target: "padoExtension",
       origin: "padoZKAttestationJSSDK",
@@ -44,7 +47,7 @@ export default class ZkAttestationJSSDK {
           if (name === "checkIsInstalledRes") {
             console.timeEnd('checkIsInstalledCost')
             tickerTimer && clearTimeout(tickerTimer)
-            console.log('333 sdk receive checkIsInstalledRes')
+            console.log('333-sdk-receive checkIsInstalledRes')
             this.isInstalled = true
             window.postMessage({
               target: "padoExtension",
@@ -74,8 +77,8 @@ export default class ZkAttestationJSSDK {
       this._verifyAttestationParams(attestationParams);
       const vaildResult = this._verifyAttestationParams(attestationParams)
       console.log('333-sdk-startAttestation-vaildResult', vaildResult)
-      await this.initAttestation()
-      const formatParams = { ...attestationParams }
+      await this.initAttestation(this._dappName)
+      const formatParams = { ...attestationParams, dappName:this._dappName }
       if (formatParams['tokenSymbol']) {
         formatParams['tokenSymbol'] = formatParams['tokenSymbol'].toUpperCase()
       }
@@ -163,6 +166,9 @@ export default class ZkAttestationJSSDK {
     //   alert('Please install the Pado extension first!')
     //   return
     // }
+    if (!startAttestationReturnParams || !wallet) {
+      return Promise.reject(new ZkAttestationError('00005', 'Params error!'))
+    }
     try {
       const { chainName } = startAttestationReturnParams
       const chainObj = (EASInfo as { [key: string]: any })[chainName]
@@ -185,7 +191,7 @@ export default class ZkAttestationJSSDK {
       if (onChainRes) {
         if (onChainRes.error) {
           if (onChainRes.error === 1) {
-            Promise.reject(new ZkAttestationError('00007', 'Your balance is insufficient'))
+            Promise.reject(new ZkAttestationError('00007', 'Your balance is insufficient.'))
              
           } else if (onChainRes.error === 2) {
             Promise.reject(new ZkAttestationError('00008', 'Please try again later.'))

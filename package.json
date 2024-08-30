@@ -13,18 +13,15 @@
     "./dist"
   ],
   "scripts": {
-    "build": "rm -rf dist && tsc --build tsconfig.json",
+    "build": "rm -rf dist && tsc --build tsconfig.json && cp src/lib/lhe.wasm dist/lib/",
     "lint": "eslint -c .eslintrc --ext .ts src",
     "format": "prettier --check --write src/**/*.ts  --config .prettierrc",
     "pretest:integration": "npm run build && npm link",
     "publish": "rm -rf dist/demo dist/test && npm publish --access public",
     "test": "jest"
   },
-  "dependencies":{
-    "ethers": "5.7.2",
-    "@ethereum-attestation-service/eas-sdk": "^0.29.0"
-  },
   "devDependencies": {
+    
     "@types/jest": "^29.5.12",
     "@types/node": "^20.12.7",
     "@typescript-eslint/eslint-plugin": "^7.7.0",

@@ -5,7 +5,8 @@ export const ONEMINUTE = 60 * ONESECOND;
 export const ATTESTATIONPOLLINGTIME = 3 * ONESECOND;
 export const ATTESTATIONPOLLINGTIMEOUT = 5 * ONEMINUTE;
 // const CURENV  = process.env.NODE_ENV
-const CURENV  = 'production'
+// const CURENV  = 'production'
+const CURENV  = 'development'
 console.log('333-sdk-process.env.NODE_ENV', process.env.NODE_ENV)
 const PADOADDRESSMAP = {
   development: '0xe02bd7a6c8aa401189aebb5bad755c2610940a73',
