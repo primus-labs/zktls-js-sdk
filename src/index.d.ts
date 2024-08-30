@@ -100,3 +100,5 @@ export type InitAttestationReturn = {
   result: boolean;
   errorData?: ErrorData;
 }
+
+export type Env = 'development' | 'test' | 'production'

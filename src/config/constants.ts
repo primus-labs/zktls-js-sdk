@@ -5,16 +5,16 @@ export const ONEMINUTE = 60 * ONESECOND;
 export const ATTESTATIONPOLLINGTIME = 3 * ONESECOND;
 export const ATTESTATIONPOLLINGTIMEOUT = 5 * ONEMINUTE;
 // const CURENV  = process.env.NODE_ENV
-// const CURENV  = 'production'
-const CURENV  = 'development'
+const CURENV  = 'production'
+// const CURENV  = 'development'
 console.log('333-sdk-process.env.NODE_ENV', process.env.NODE_ENV)
-const PADOADDRESSMAP = {
+export const PADOADDRESSMAP = {
   development: '0xe02bd7a6c8aa401189aebb5bad755c2610940a73',
   production: '0xDB736B13E2f522dBE18B2015d0291E4b193D8eF6',
 };
 export const PADOADDRESS = PADOADDRESSMAP[CURENV];
 
-const EASINFOMAP = {
+export const EASINFOMAP = {
   development: {
     'Scroll Sepolia': {
       officialName: 'Scroll Sepolia Testnet',
@@ -417,10 +417,18 @@ const EASINFOMAP = {
   },
 };
 export const EASInfo = EASINFOMAP[CURENV];
-export const CHAINNAMELIST = Object.keys(EASINFOMAP[CURENV]).map((i:any) => ({
-  text: i.officialName,
-  value: parseInt(i.chainId)
-}));
+// export const CHAINNAMELIST = Object.values(EASINFOMAP[CURENV]).map((i:any) => ({
+//   text: i.officialName,
+//   value: parseInt(i.chainId)
+// }));
+
+export const CHAINNAMELISTONALLENV = Object.values(EASINFOMAP).reduce((prev, curr) => {
+  const arr = Object.values(curr).map((i: any) => ({
+    text: i.officialName,
+    value: parseInt(i.chainId)
+  }))
+  return prev.concat(arr as any)
+},[])
 export const ATTESTATIONTYPEIDLIST = [
   {
     text: "binance kyc",

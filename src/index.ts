@@ -1,26 +1,37 @@
 import { ethers, utils } from 'ethers';
 import { defaultAbiCoder } from 'ethers/lib/utils';
 import { ZERO_BYTES32 } from '@ethereum-attestation-service/eas-sdk';
-import { ATTESTATIONPOLLINGTIME, ATTESTATIONPOLLINGTIMEOUT, PADOADDRESS, EASInfo, CHAINNAMELIST, ATTESTATIONTYPEIDLIST } from "./config/constants";
+import { ATTESTATIONPOLLINGTIME, ATTESTATIONPOLLINGTIMEOUT, ATTESTATIONTYPEIDLIST ,CHAINNAMELISTONALLENV, PADOADDRESSMAP,EASINFOMAP} from "./config/constants";
 import { lineaportalabi } from './config/lineaportalabi';
 import { proxyabi } from './config/proxyabi';
 import { isValidNumericString, isValidLetterString, isValidNumberString } from './utils'
-import { AttestationParams, ChainOption, StartAttestationReturnParams,AttestationTypeOption} from './index.d'
+import { AttestationParams, ChainOption, StartAttestationReturnParams,AttestationTypeOption,Env} from './index.d'
 import { ZkAttestationError } from './error'
 export default class ZkAttestationJSSDK {
+  private _env: Env;
   private _dappName: string;
+  private _padoAddress: string;
   isInstalled?: boolean;
   isInitialized: boolean;
   supportedChainNameList: ChainOption[]
   supportedAttestationTypeList: AttestationTypeOption[]
 
-  constructor() {
+  constructor(env?: '' | '') {
     this.isInitialized = false
     this.isInstalled = false
-    this.supportedChainNameList = CHAINNAMELIST
+    if (env && ['development', 'test'].includes(env)) {
+      this._env = 'development'
+    } else {
+      this._env = 'production'
+    }
+    this.supportedChainNameList = Object.values(EASINFOMAP[this._env]).map((i:any) => ({
+      text: i.officialName,
+      value: parseInt(i.chainId)
+    }));
+    this._padoAddress = PADOADDRESSMAP[this._env]
     this.supportedAttestationTypeList = ATTESTATIONTYPEIDLIST
     this._dappName = ''
-    // this._bindUnloadEvent()
+    this._bindUnloadEvent()
   }
   initAttestation(dappName: string): Promise<boolean> {
     this._dappName = dappName
@@ -231,8 +242,8 @@ export default class ZkAttestationJSSDK {
     );
     console.log('333-sdk-Verification result:', result);
     console.timeEnd('verifyAttestationCost')
-
-    const verifyResult = PADOADDRESS.toLowerCase() === result.toLowerCase();
+  
+    const verifyResult = this._padoAddress.toLowerCase() === result.toLowerCase();
     return verifyResult
   }
   async _getFee(chainName: string, wallet: any): Promise<any> {
@@ -394,7 +405,7 @@ export default class ZkAttestationJSSDK {
 
   _verifyAttestationParams(attestationParams: AttestationParams): boolean {
     const { chainId, walletAddress, attestationTypeId, tokenSymbol, assetsBalance, followersCount } = attestationParams
-    const activeChainOption = this.supportedChainNameList.find(i => i.value === chainId)
+    const activeChainOption = this.supportedChainNameList.find((i:any) => i.value === chainId)
     if (!activeChainOption) {
       throw new ZkAttestationError('00005','Unsupported chainName!')
     }
