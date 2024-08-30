@@ -13,11 +13,12 @@
     "./dist"
   ],
   "scripts": {
-    "build": "rm -rf dist && tsc --build tsconfig.json && cp src/lib/lhe.wasm dist/lib/",
+    "build": "NODE_ENV=production rm -rf dist && tsc --build tsconfig.json",
+    "build:test": "NODE_ENV=development rm -rf dist && tsc --build tsconfig.json",
     "lint": "eslint -c .eslintrc --ext .ts src",
     "format": "prettier --check --write src/**/*.ts  --config .prettierrc",
     "pretest:integration": "npm run build && npm link",
-    "publish": "rm -rf dist/demo dist/test && npm publish --access public",
+    "publish": "npm publish --access public",
     "test": "jest"
   },
   "devDependencies": {

@@ -436,16 +436,16 @@ export default class ZkAttestationJSSDK {
     return true
   }
 
-  // _bindUnloadEvent() {
-  //   const beforeunloadFn = async () => {
-  //     window.postMessage({
-  //       target: "padoExtension",
-  //       origin: "padoZKAttestationJSSDK",
-  //       name: "stopOffscreen",
-  //     });
-  //   };
-  //   window.addEventListener('beforeunload', beforeunloadFn);
-  // }
+  _bindUnloadEvent() {
+    const beforeunloadFn = async () => {
+      window.postMessage({
+        target: "padoExtension",
+        origin: "padoZKAttestationJSSDK",
+        name: "beforeunload",
+      });
+    };
+    window.addEventListener('beforeunload', beforeunloadFn);
+  }
 }
 
 
