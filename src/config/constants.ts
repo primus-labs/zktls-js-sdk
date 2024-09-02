@@ -260,7 +260,7 @@ export const EASINFOMAP = {
       transactionDetailUrl: 'https://lineascan.build/tx',
     },
     BSC: {
-      officialName:'BNB Smart Chain Mainnet',
+      officialName:'BNB Chain',
       showName: 'BNB Chain',
       // icon: iconBinance,
       title: 'BSC',
@@ -299,7 +299,7 @@ export const EASINFOMAP = {
       transactionDetailUrl: 'https://www.bascan.io/attestation',
     },
     opBNB: {
-      officialName:'opBNB Mainnet',
+      officialName:'opBNB',
       showName: 'opBNB',
       // icon: iconBinance,
       title: 'opBNB',
@@ -333,7 +333,7 @@ export const EASINFOMAP = {
       bucketDetailUrl: 'https://scan.sign.global/attestation/onchain_evm_204_',
     },
     Arbitrum: {
-      officialName:'Arbitrum One',
+      officialName:'Arbitrum',
       showName: 'Arbitrum',
       // icon: iconArbitrum,
       title: 'Arbitrum', // ArbitrumOne

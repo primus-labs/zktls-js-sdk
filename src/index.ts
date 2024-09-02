@@ -17,27 +17,32 @@ export default class ZkAttestationJSSDK {
   supportedChainNameList: ChainOption[]
   supportedAttestationTypeList: AttestationTypeOption[]
 
-  constructor(env?: '' | '') {
+  constructor(dappName: string, env?: '' | '') {
+    this._dappName = dappName
     this.isInitialized = false
     this.isInstalled = false
+    this.supportedAttestationTypeList = ATTESTATIONTYPEIDLIST
+    this.supportedChainNameList = []
+    this._padoAddress = ''
+    this._easInfo = {}
     if (env && ['development', 'test'].includes(env)) {
       this._env = 'development'
     } else {
       this._env = 'production'
     }
-    console.log('333-sdk-env:',this._env )
-    this.supportedChainNameList = Object.values(EASINFOMAP[this._env]).map((i:any) => ({
+    this._initEnvProperties()
+    // this._bindUnloadEvent()
+  }
+  _initEnvProperties() {
+    this.supportedChainNameList = Object.values((EASINFOMAP as any)[this._env]).map((i:any) => ({
       text: i.officialName,
       value: parseInt(i.chainId)
     }));
-    this._padoAddress = PADOADDRESSMAP[this._env]
-    this._easInfo = EASINFOMAP[this._env]
-    this.supportedAttestationTypeList = ATTESTATIONTYPEIDLIST
-    this._dappName = ''
-    this._bindUnloadEvent()
+    this._padoAddress = (PADOADDRESSMAP as any)[this._env]
+    this._easInfo = (EASINFOMAP as any)[this._env]
+    console.log('333-sdk-env:',this._env, this.supportedChainNameList, this._easInfo )
   }
-  initAttestation(dappName: string): Promise<boolean> {
-    this._dappName = dappName
+  initAttestation(): Promise<boolean> {
     window.postMessage({
       target: "padoExtension",
       origin: "padoZKAttestationJSSDK",
@@ -79,8 +84,11 @@ export default class ZkAttestationJSSDK {
               resolve(true);
             } else {
               window?.removeEventListener('message', eventListener);
-              const { desc, code } = errorData
-              reject(new ZkAttestationError(code,desc))
+              console.log('333-sdk-initAttestationRes-errorData:',errorData)
+              if (errorData) {
+                const { desc, code } = errorData
+                reject(new ZkAttestationError(code,desc))
+              }
             }
           }
         }
@@ -98,7 +106,7 @@ export default class ZkAttestationJSSDK {
       this._verifyAttestationParams(attestationParams);
       const vaildResult = this._verifyAttestationParams(attestationParams)
       console.log('333-sdk-startAttestation-vaildResult', vaildResult)
-      await this.initAttestation(this._dappName)
+      await this.initAttestation()
       let formatParams:any = { ...attestationParams, dappName:this._dappName }
       if (formatParams['tokenSymbol']) {
         formatParams['tokenSymbol'] = formatParams['tokenSymbol'].toUpperCase()
@@ -107,7 +115,7 @@ export default class ZkAttestationJSSDK {
         const chainMetaInfo = Object.values(this._easInfo).find((i:any) => formatParams['chainId'] === parseInt(i.chainId))
         formatParams['chainName'] = (chainMetaInfo as any).title
       }
-      
+      console.log('333-sdk-startAttestation-params',formatParams )
       window.postMessage({
         target: "padoExtension",
         origin: "padoZKAttestationJSSDK",
@@ -169,7 +177,7 @@ export default class ZkAttestationJSSDK {
                 console.timeEnd('startAttestCost')
                 if (reStartFlag) {
                   console.log('333-reStartFlag')
-                  await this.initAttestation(this._dappName)
+                  await this.initAttestation()
                 }
                 window?.removeEventListener('message', eventListener);
                 const { desc, code } = errorData
@@ -461,16 +469,16 @@ export default class ZkAttestationJSSDK {
     return true
   }
 
-  _bindUnloadEvent() {
-    const beforeunloadFn = async () => {
-      window.postMessage({
-        target: "padoExtension",
-        origin: "padoZKAttestationJSSDK",
-        name: "beforeunload",
-      });
-    };
-    window.addEventListener('beforeunload', beforeunloadFn);
-  }
+  // _bindUnloadEvent() {
+  //   const beforeunloadFn = async () => {
+  //     window.postMessage({
+  //       target: "padoExtension",
+  //       origin: "padoZKAttestationJSSDK",
+  //       name: "beforeunload",
+  //     });
+  //   };
+  //   window.addEventListener('beforeunload', beforeunloadFn);
+  // }
 }
 
 
