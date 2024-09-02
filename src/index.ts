@@ -14,15 +14,15 @@ export default class ZkAttestationJSSDK {
   private _easInfo: any;
   isInstalled?: boolean;
   isInitialized: boolean;
-  supportedChainNameList: ChainOption[]
+  supportedChainList: ChainOption[]
   supportedAttestationTypeList: AttestationTypeOption[]
 
-  constructor(dappName: string, env?: '' | '') {
-    this._dappName = dappName
+  constructor( env?: '' | '') {
+    this._dappName = ''
     this.isInitialized = false
     this.isInstalled = false
     this.supportedAttestationTypeList = ATTESTATIONTYPEIDLIST
-    this.supportedChainNameList = []
+    this.supportedChainList = []
     this._padoAddress = ''
     this._easInfo = {}
     if (env && ['development', 'test'].includes(env)) {
@@ -33,16 +33,9 @@ export default class ZkAttestationJSSDK {
     this._initEnvProperties()
     // this._bindUnloadEvent()
   }
-  _initEnvProperties() {
-    this.supportedChainNameList = Object.values((EASINFOMAP as any)[this._env]).map((i:any) => ({
-      text: i.officialName,
-      value: parseInt(i.chainId)
-    }));
-    this._padoAddress = (PADOADDRESSMAP as any)[this._env]
-    this._easInfo = (EASINFOMAP as any)[this._env]
-    console.log('333-sdk-env:',this._env, this.supportedChainNameList, this._easInfo )
-  }
-  initAttestation(): Promise<boolean> {
+  
+  initAttestation(dappName: string): Promise<boolean> {
+    this._dappName = dappName
     window.postMessage({
       target: "padoExtension",
       origin: "padoZKAttestationJSSDK",
@@ -106,7 +99,7 @@ export default class ZkAttestationJSSDK {
       this._verifyAttestationParams(attestationParams);
       const vaildResult = this._verifyAttestationParams(attestationParams)
       console.log('333-sdk-startAttestation-vaildResult', vaildResult)
-      await this.initAttestation()
+      await this.initAttestation(this._dappName)
       let formatParams:any = { ...attestationParams, dappName:this._dappName }
       if (formatParams['tokenSymbol']) {
         formatParams['tokenSymbol'] = formatParams['tokenSymbol'].toUpperCase()
@@ -177,7 +170,7 @@ export default class ZkAttestationJSSDK {
                 console.timeEnd('startAttestCost')
                 if (reStartFlag) {
                   console.log('333-reStartFlag')
-                  await this.initAttestation()
+                  await this.initAttestation(this._dappName)
                 }
                 window?.removeEventListener('message', eventListener);
                 const { desc, code } = errorData
@@ -416,7 +409,7 @@ export default class ZkAttestationJSSDK {
 
   _verifyAttestationParams(attestationParams: AttestationParams): boolean {
     const { chainId, walletAddress, attestationTypeId, tokenSymbol, assetsBalance, followersCount } = attestationParams
-    const activeChainOption = this.supportedChainNameList.find((i:any) => i.value === chainId)
+    const activeChainOption = this.supportedChainList.find((i:any) => i.value === chainId)
     if (!activeChainOption) {
       throw new ZkAttestationError('00005','Unsupported chainName!')
     }
@@ -467,6 +460,16 @@ export default class ZkAttestationJSSDK {
     }
 
     return true
+  }
+
+  _initEnvProperties() {
+    this.supportedChainList = Object.values((EASINFOMAP as any)[this._env]).map((i:any) => ({
+      text: i.officialName,
+      value: parseInt(i.chainId)
+    }));
+    this._padoAddress = (PADOADDRESSMAP as any)[this._env]
+    this._easInfo = (EASINFOMAP as any)[this._env]
+    console.log('333-sdk-env:',this._env, this.supportedChainList, this._easInfo )
   }
 
   // _bindUnloadEvent() {

@@ -362,7 +362,7 @@ export const EASINFOMAP = {
             '0xe08e249cc244e018cc56cb05938665fd16e373e77acc23d625e84cd4fe07cc48',
         },
       },
-      chainId: '0xa4b1', // numToHex
+      chainId: '0xa4b1', // 42161
       chainName: 'ArbitrumOne',
       rpcUrls: ['https://arb1.arbitrum.io/rpc'],
       blockExplorerUrls: ['https://arbiscan.io'],
@@ -431,47 +431,47 @@ export const EASInfo = EASINFOMAP[CURENV];
 // },[])
 export const ATTESTATIONTYPEIDLIST = [
   {
-    text: "binance kyc",
+    text: "binance kyc status",
     value: "1",
   },
   {
-    text: "binance account",
+    text: "binance account ownership",
     value: "2",
   },
   {
-    text: "x account",
+    text: "x account ownership",
     value: "3",
   },
   {
-    text: "okx kyc",
+    text: "okx kyc ownership",
     value: "4",
   },
   // {
-  //   text: "ins account",
+  //   text: "ins account ownership",
   //   value: "5",
   // },
   {
-    text: "tiktok account",
+    text: "tiktok account ownership",
     value: "6",
   },
   {
-    text: "binance Assets Proof",
+    text: "binance assets balance",
     value: "9",
   },
   {
-    text: "binance Token Holding",
+    text: "binance token holding",
     value: "10",
   },
   {
-    text: "okx Assets Proof",
+    text: "okx assets balance",
     value: "11",
   },
   {
-    text: "okx Token Holding",
+    text: "okx token holding",
     value: "12",
   },
   {
-    text: "X Followers",
+    text: "X social connections",
     value: "15",
   },
 ]
