@@ -443,7 +443,7 @@ export const ATTESTATIONTYPEIDLIST = [
     value: "3",
   },
   {
-    text: "okx kyc ownership",
+    text: "okx kyc status",
     value: "4",
   },
   // {

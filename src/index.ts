@@ -187,7 +187,7 @@ export default class ZkAttestationJSSDK {
     }
   }
   
-  async sendToChain(startAttestationReturnParams: StartAttestationReturnParams, wallet: any): Promise<boolean> {
+  async sendToChain(startAttestationReturnParams: StartAttestationReturnParams, wallet: any): Promise<string> {
     // if (!this.isInstalled) {
     //   alert('Please install the Pado extension first!')
     //   return
@@ -203,30 +203,35 @@ export default class ZkAttestationJSSDK {
       console.time('sendToChainCost')
       const onChainRes = await this._attestByDelegationProxyFee(startAttestationReturnParams, chainObj, wallet)
       console.timeEnd('sendToChainCost')
-      // const {attestationRequestId, chainName} = startAttestationReturnParams
-      // window.postMessage({
-      //   target: "padoExtension",
-      //   origin: "padoZKAttestationJSSDK",
-      //   name: "sendToChainRes",
-      //   params: {
-      //     attestationRequestId,
-      //     chainName,
-      //     onChainRes
-      //   },
-      // });
+      const {attestationRequestId} = startAttestationReturnParams
+      window.postMessage({
+        target: "padoExtension",
+        origin: "padoZKAttestationJSSDK",
+        name: "sendToChainRes",
+        params: {
+          attestationRequestId,
+          chainName,
+          onChainRes
+        },
+      });
       if (onChainRes) {
         if (onChainRes.error) {
           if (onChainRes.error === 1) {
-            Promise.reject(new ZkAttestationError('00007', 'Your balance is insufficient.'))
+            return Promise.reject(new ZkAttestationError('00007', 'Your balance is insufficient.'))
              
           } else if (onChainRes.error === 2) {
-            Promise.reject(new ZkAttestationError('00008', 'Please try again later.'))
+            return  Promise.reject(new ZkAttestationError('00008', 'Please try again later.'))
           }
-          return false;
+          return  Promise.reject(new ZkAttestationError('00008', 'Please try again later.'))
         }
-        return true
+        const chainInfo = this._easInfo[chainName] as any;
+        if (chainName === 'opBNB') {
+          return `${chainInfo.bucketDetailUrl}${onChainRes}`;
+        } else {
+          return `${chainInfo?.transactionDetailUrl}/${onChainRes}`;
+        }
       } else {
-        return false
+        return Promise.reject(new ZkAttestationError('00008', 'Please try again later.'))
       }
     } catch (e:any) {
       return Promise.reject(e)
