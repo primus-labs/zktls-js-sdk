@@ -175,7 +175,7 @@ export const EASINFOMAP = {
         symbol: 'BNB',
         decimals: 18,
       },
-      transactionDetailUrl: 'https://test.bascan.io/attestation',
+      transactionDetailUrl: 'https://testnet.bascan.io/attestation',
     },
     
     opBNB: {
@@ -296,7 +296,7 @@ export const EASINFOMAP = {
         symbol: 'BNB',
         decimals: 18,
       },
-      transactionDetailUrl: 'https://www.bascan.io/attestation',
+      transactionDetailUrl: 'https://bascan.io/attestation',
     },
     opBNB: {
       officialName:'opBNB',
