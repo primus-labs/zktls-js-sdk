@@ -220,9 +220,9 @@ export default class ZkAttestationJSSDK {
             return Promise.reject(new ZkAttestationError('00007', 'Your balance is insufficient.'))
              
           } else if (onChainRes.error === 2) {
-            return  Promise.reject(new ZkAttestationError('00008', 'Please try again later.'))
+            return  Promise.reject(new ZkAttestationError('00008', 'Failed to submit proof to blockchain.Please try again later.'))
           }
-          return  Promise.reject(new ZkAttestationError('00008', 'Please try again later.'))
+          return  Promise.reject(new ZkAttestationError('00008', 'Failed to submit proof to blockchain.Please try again later.'))
         }
         const chainInfo = this._easInfo[chainName] as any;
         if (chainName === 'opBNB') {
@@ -231,7 +231,7 @@ export default class ZkAttestationJSSDK {
           return `${chainInfo?.transactionDetailUrl}/${onChainRes}`;
         }
       } else {
-        return Promise.reject(new ZkAttestationError('00008', 'Please try again later.'))
+        return Promise.reject(new ZkAttestationError('00008', 'Failed to submit proof to blockchain.Please try again later.'))
       }
     } catch (e:any) {
       return Promise.reject(e)

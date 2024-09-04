@@ -9,7 +9,7 @@ export function isValidLetterString(value: string) {
 }  
 
 export function isValidNumberString(value: string) {  
-  const regex = /^[1-9](\d*(\.\d{1,6})?)$/;   
+  const regex = /^(0\.(0*[1-9]\d{0,5})|[1-9]\d*(\.\d{1,6})?)$/;   
   return typeof value === 'string' && regex.test(value);  
 }  
     
