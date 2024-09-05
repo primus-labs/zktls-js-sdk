@@ -151,7 +151,7 @@ export default class ZkAttestationJSSDK {
               }
             }
             if (name === "startAttestationRes") {
-              const { result, data, errorData, reStartFlag} = params
+              const { result, data, errorData} = params
               console.log('333-sdk-receive getAttestationResultRes', params)
               if (result) {
                 clearInterval(pollingTimer)
@@ -167,13 +167,13 @@ export default class ZkAttestationJSSDK {
                 clearInterval(pollingTimer)
                 clearTimeout(timeoutTimer)
                 console.timeEnd('startAttestCost')
-                if (reStartFlag) {
-                  // console.log('333-reStartFlag')
-                  await this.initAttestation(this._dappSymbol)
-                }
                 window?.removeEventListener('message', eventListener);
                 const { code } = errorData
                 reject(new ZkAttestationError(code))
+                // if (params.reStartFlag) {
+                //   await this.initAttestation(this._dappSymbol)
+                //   console.log('333-reStartFlag')
+                // }
               }
             }
           }
@@ -214,6 +214,7 @@ export default class ZkAttestationJSSDK {
           onChainRes
         },
       });
+      console.log('333-sdk-sendToChainRes-onChainRes',onChainRes)
       if (onChainRes) {
         if (onChainRes.error) {
           if (onChainRes.error === 1) {
@@ -222,7 +223,7 @@ export default class ZkAttestationJSSDK {
              
           } else if (onChainRes.error === 2) {
             const errorCode ='00008'
-            return Promise.reject(new ZkAttestationError(errorCode))
+            return Promise.reject(new ZkAttestationError(errorCode ,onChainRes.message))
           }
           const errorCode ='00008'
             return Promise.reject(new ZkAttestationError(errorCode))
@@ -235,11 +236,13 @@ export default class ZkAttestationJSSDK {
         }
       } else {
         const errorCode ='00008'
-            return Promise.reject(new ZkAttestationError(errorCode))
-        
+          return Promise.reject(new ZkAttestationError(errorCode))
       }
-    } catch (e:any) {
-      return Promise.reject(e)
+    } catch (e: any) {
+      console.log('333-sdk-sendToChain error', e)
+      console.dir(e)
+      console.log( e.code, e.message)
+      return Promise.reject(new ZkAttestationError('00008', e.message))
     }
     
   }
@@ -325,6 +328,7 @@ export default class ZkAttestationJSSDK {
       }
     } catch (er: any) {
       console.log('222222eas attestByDelegationProxyFee attest failed', er);
+      console.dir(er);
       try {
         if (
           chainName.startsWith('Linea') ||
@@ -347,7 +351,7 @@ export default class ZkAttestationJSSDK {
           error: 1,
           message: 'insufficient funds',
         };
-      } else if (er.ACTION_REJECTED === 'ACTION_REJECTED') {
+      } else if (er.ACTION_REJECTED === 'ACTION_REJECTED' || er.code === 'ACTION_REJECTED') {
         return {
           error: 2,
           message: 'user rejected transaction',
@@ -411,7 +415,9 @@ export default class ZkAttestationJSSDK {
           console.error(addError);
         }
       } else if (err.code === 4001) {
-        throw new Error(err.code);
+        // console.log('333-sdk-switchChain error:', err)
+        // console.log( err.code, err.message)
+        throw err;
       }
       return true;
     }
