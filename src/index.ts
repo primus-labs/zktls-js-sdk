@@ -58,7 +58,6 @@ export default class ZkAttestationJSSDK {
           if (name === "checkIsInstalledRes") {
             console.timeEnd('checkIsInstalledCost')
             tickerTimer && clearTimeout(tickerTimer)
-            console.log('333-sdk-receive checkIsInstalledRes')
             this.isInstalled = true
             window.postMessage({
               target: "padoExtension",
@@ -76,7 +75,7 @@ export default class ZkAttestationJSSDK {
               resolve(true);
             } else {
               window?.removeEventListener('message', eventListener);
-              console.log('333-sdk-initAttestationRes-errorData:',errorData)
+              // console.log('333-sdk-initAttestationRes-errorData:',errorData)
               if (errorData) {
                 const { code } = errorData
                 reject(new ZkAttestationError(code))
@@ -108,7 +107,7 @@ export default class ZkAttestationJSSDK {
         const chainMetaInfo = Object.values(this._easInfo).find((i:any) => formatParams['chainID'] === parseInt(i.chainId))
         formatParams['chainName'] = (chainMetaInfo as any).title
       }
-      console.log('333-sdk-startAttestation-params',formatParams )
+      // console.log('333-sdk-startAttestation-params',formatParams )
       window.postMessage({
         target: "padoExtension",
         origin: "padoZKAttestationJSSDK",
@@ -169,7 +168,7 @@ export default class ZkAttestationJSSDK {
                 clearTimeout(timeoutTimer)
                 console.timeEnd('startAttestCost')
                 if (reStartFlag) {
-                  console.log('333-reStartFlag')
+                  // console.log('333-reStartFlag')
                   await this.initAttestation(this._dappSymbol)
                 }
                 window?.removeEventListener('message', eventListener);
@@ -194,13 +193,12 @@ export default class ZkAttestationJSSDK {
     // }
     if (!startAttestationReturnParams || !wallet) {
       const errorCode = '00005'
-      return Promise.reject(new ZkAttestationError(errorCode
-              ))
+      return Promise.reject(new ZkAttestationError(errorCode))
     }
     try {
       const { chainName } = startAttestationReturnParams
       const chainObj = (this._easInfo as { [key: string]: any })[chainName]
-      console.log('333-sdk-chainObj',startAttestationReturnParams,chainName, this._easInfo, chainObj)
+      // console.log('333-sdk-chainObj',startAttestationReturnParams,chainName, this._easInfo, chainObj)
       await this._switchChain(chainObj, wallet)
       console.time('sendToChainCost')
       const onChainRes = await this._attestByDelegationProxyFee(startAttestationReturnParams, chainObj, wallet)

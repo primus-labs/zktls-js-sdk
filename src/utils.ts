@@ -1,6 +1,6 @@
 
 export function isValidNumericString(value: string) {  
-    const regex = /^[1-9][0-9]*$/; 
+    const regex = /^[0-9]*$/; 
     return typeof value === 'string' && regex.test(value);  
 }  
 export function isValidLetterString(value: string) {  
