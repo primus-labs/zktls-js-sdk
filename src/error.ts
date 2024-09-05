@@ -13,11 +13,54 @@ export type OnChainErrorCode =
   
 export type ErrorCode = AttestationErrorCode | OnChainErrorCode;
 
+export const ErrorCodeMAP = {
+  '00001': 'The MPC-TLS algorithm has not been initialized. Pleaese restart the process.',
+  '00002':'The process did not respond within 5 minutes.',
+  '00003':'An attestation process is currently being generated. Please try again later.',
+  '00004':'The user close or cancel the attestation process.',
+  '00005':'Wrong parameters!',
+  '00006':'No PADO extension version 0.3.12 or above was detected as installed.',
+  '00007':'Insufficient wallet balance.',
+  '00008':'Failed to submit the proof to blockchain. Please try again later.',
+  '00009':'Your dapp is not registered. Please contact the PADO team first.',
+  '99999':'Undefined error. Contact the PADO team for further support',
+  '00102':'Insufficient assets balance in your Binance Spot Account.',
+  '00104': 'Your attestation request did not meet the necessary requirements.',
+  '10001':'The internet condition is not stable enough to complete the zkAttestation flow. Please try again later.',
+  '10002':'The attestation process has been interrupted due to some unkown network error. Please try again later.',
+  '10003':"Can't connect attestation servier due to unstable internet condition. Please try again later.",
+  '10004': "Can't connect data source servier due to untable internet condition. Please try again later.",
+  '20005':"Can't complete the attestation due to some workflow error. Please try again later.",
+  '30001': "Can't complete the attestation flow due to response error. Please try again later.",
+  '30002': "Can't complete the attestation flow due to response error. Please try again later.",
+  '30003': "Can't complete the attestation flow due to response error. Please try again later.",
+  '30004': "Can't complete the attestation flow due to response error. Please try again later.",
+  '50007':"Can't complete the attestation due to some algorithm execution issues.",
+  '50008':"Can't complete the attestation due to abnormal execution results.",
+  '50009': 'The algorithem service did not respond within 5 minutes.',
+  '50010': "Can't complete the attestation due to some compatibility issues.",
+  '50011': "Can't complete the attestation due to some algorithm version issues.",
+  "00101":'Insufficient assets in your Trading Account. Please confirm and try again later.',
+  "00103": 'This account may have already been bound to a wallet address, or your wallet address may already have a zkAttestation with another Binance account.',
+  '20001':"Something went wrong. Please try again later.",
+  '20002':"Something went wrong. Please try again later.",
+  '20003':"Something went wrong. Please try again later.",
+  '20004': "Something went wrong. Please try again later.",
+  '40001':"Something went wrong. Please try again later.",
+  '40002': "Something went wrong. Please try again later.",
+  '50001':"Something went wrong. Please try again later.",
+  '50002': "Something went wrong. Please try again later.",
+  '50003':"Something went wrong. Please try again later.",
+  '50004': "Something went wrong. Please try again later.",
+  '50005':"Something went wrong. Please try again later.",
+  '50006':"Something went wrong. Please try again later.",
+}
 export class ZkAttestationError {
   code: ErrorCode;
   message: string;
-  constructor(code: ErrorCode, message: string) {
-    this.message = message;
+  constructor(code: ErrorCode, message?: string) {
+    this.message = message ?? ErrorCodeMAP[code as keyof typeof ErrorCodeMAP];
     this.code = code;
   }
 }
+

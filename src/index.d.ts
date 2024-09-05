@@ -1,10 +1,10 @@
 export type AttestationParams = {
-  chainId: number;
+  chainID: number;
   walletAddress: string;
-  attestationTypeId: string;
+  attestationTypeID: string;
   tokenSymbol?: string;
   assetsBalance?: string;
-  followersCount?: string;
+  followersNO?: string;
 }
 export type ChainOption = {
   text: string;
