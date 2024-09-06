@@ -1,11 +1,11 @@
 {
-  "name": "zkattestation-js-sdk",
+  "name": "@padolabs/mpctls-js-sdk",
   "version": "1.0.0",
   "author": "PADO Labs <dev@padolabs.org>",
-  "description": "pado extension zkAttestation js sdk",
+  "description": "pado mpc-tls js sdk",
   "repository": {
     "type": "git",
-    "url": "https://github.com/pado-labs/zkAttestation-js-sdk.git"
+    "url": "https://github.com/pado-labs/mpctls-js-sdk.git"
   },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -13,8 +13,8 @@
     "./dist"
   ],
   "scripts": {
-    "build": "NODE_ENV=production rm -rf dist && tsc --build tsconfig.json",
-    "build:test": "NODE_ENV=development rm -rf dist && tsc --build tsconfig.json",
+    "build": "rm -rf dist && tsc --build tsconfig.json",
+    "build:test": "rm -rf dist && tsc --build tsconfig.json",
     "lint": "eslint -c .eslintrc --ext .ts src",
     "format": "prettier --check --write src/**/*.ts  --config .prettierrc",
     "pretest:integration": "npm run build && npm link",
@@ -22,7 +22,6 @@
     "test": "jest"
   },
   "devDependencies": {
-    
     "@types/jest": "^29.5.12",
     "@types/node": "^20.12.7",
     "@typescript-eslint/eslint-plugin": "^7.7.0",
