@@ -12,6 +12,9 @@ export default class ZkAttestationJSSDK {
   private _dappSymbol: string;
   private _padoAddress: string;
   private _easInfo: any;
+  private _attestLoading: boolean;
+  private _sendToChainLoading: boolean;
+  private _verifyLoading: boolean;
   isInstalled?: boolean;
   isInitialized: boolean;
   supportedChainList: ChainOption[]
@@ -25,6 +28,9 @@ export default class ZkAttestationJSSDK {
     this.supportedChainList = []
     this._padoAddress = ''
     this._easInfo = {}
+    this._attestLoading = false
+    this._sendToChainLoading = false
+    this._verifyLoading = false
     if (env && ['development', 'test'].includes(env)) {
       this._env = 'development'
     } else {
@@ -93,6 +99,11 @@ export default class ZkAttestationJSSDK {
       const errorCode = '00001'
       return Promise.reject(new ZkAttestationError(errorCode))
     }
+    if (this._attestLoading) {
+      const errorCode = '00003'
+      return Promise.reject(new ZkAttestationError(errorCode))
+    }
+    this._attestLoading = true
 
     try {
       this._verifyAttestationParams(attestationParams);
@@ -123,11 +134,12 @@ export default class ZkAttestationJSSDK {
           if (target === "padoZKAttestationJSSDK") {
             if (name === "getAttestationRes") {
               console.log('333 sdk receive getAttestationRes', params)
-              const { result,errorData } = params
+              const { result, errorData } = params
               if (result) {
                 timeoutTimer = setTimeout(() => {
                   if (pollingTimer) {
                     clearInterval(pollingTimer)
+                    this._attestLoading = false
                     window.postMessage({
                       target: "padoExtension",
                       origin: "padoZKAttestationJSSDK",
@@ -145,6 +157,7 @@ export default class ZkAttestationJSSDK {
                   });
                 }, ATTESTATIONPOLLINGTIME)
               } else {
+                this._attestLoading = false
                 window?.removeEventListener('message', eventListener);
                 const { code } = errorData
                 reject(new ZkAttestationError(code))
@@ -153,6 +166,7 @@ export default class ZkAttestationJSSDK {
             if (name === "startAttestationRes") {
               const { result, data, errorData} = params
               console.log('333-sdk-receive getAttestationResultRes', params)
+              this._attestLoading = false
               if (result) {
                 clearInterval(pollingTimer)
                 clearTimeout(timeoutTimer)
@@ -191,10 +205,15 @@ export default class ZkAttestationJSSDK {
     //   alert('Please install the Pado extension first!')
     //   return
     // }
+    if (this._sendToChainLoading) {
+      const errorCode = '00008'
+      return Promise.reject(new ZkAttestationError(errorCode, 'Submitting to the chain, please wait patiently'))
+    }
     if (!startAttestationReturnParams || !wallet) {
       const errorCode = '00005'
       return Promise.reject(new ZkAttestationError(errorCode))
     }
+    this._sendToChainLoading = true
     try {
       const { chainName } = startAttestationReturnParams
       const chainObj = (this._easInfo as { [key: string]: any })[chainName]
@@ -214,7 +233,8 @@ export default class ZkAttestationJSSDK {
           onChainRes
         },
       });
-      console.log('333-sdk-sendToChainRes-onChainRes',onChainRes)
+      console.log('333-sdk-sendToChainRes-onChainRes', onChainRes)
+      this._sendToChainLoading = false
       if (onChainRes) {
         if (onChainRes.error) {
           if (onChainRes.error === 1) {
@@ -235,18 +255,25 @@ export default class ZkAttestationJSSDK {
           return `${chainInfo?.transactionDetailUrl}/${onChainRes}`;
         }
       } else {
+        this._sendToChainLoading = false
         const errorCode ='00008'
           return Promise.reject(new ZkAttestationError(errorCode))
       }
     } catch (e: any) {
       console.log('333-sdk-sendToChain error', e)
       console.dir(e)
-      console.log( e.code, e.message)
+      console.log(e.code, e.message)
+      this._sendToChainLoading = false
       return Promise.reject(new ZkAttestationError('00008', e.message))
     }
     
   }
   verifyAttestation(startAttestationReturnParams: StartAttestationReturnParams): boolean {
+    if (this._verifyLoading) {
+      alert("Verification in progress, please wait patiently")
+      return false
+    }
+    this._verifyLoading = true
     console.time('verifyAttestationCost')
     const { domain, message, signature, types } = startAttestationReturnParams.eip712MessageRawDataWithSignature
     let formatDomain:any = {...domain}
