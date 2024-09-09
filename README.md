@@ -1,8 +1,8 @@
 # Overview
 
-The PADO MPC-TLS SDK is designed to provide developers with tools to directly implement MPC-TLS capabilities and provide the **zkAttestation** solutions in dApps without requiring backend development in cryptographic algorithms and attestation workflows.
+The PADO MPC-TLS SDK provides developers with tools to directly implement **the zkAttestation solution** in dApps without the need for backend cryptography or attestation workflow development.
 
-If you want to attest a user’s web data, create proofs, and implement verification mechanisms for your applications, try this [SDK](/mpc-tls/mpc-tls-sdk/quickstart) along with a set of MPC-TLS APIs.
+To attest a user’s web data, create proofs, and implement verification mechanisms, use this [SDK](/mpc-tls/mpc-tls-sdk/quickstart) along with a set of MPC-TLS APIs.
 
 **Some application examples include:**
 - Verifying the number of followers on a user’s X account to determine if they are a KOL or a newcomer.
@@ -10,16 +10,16 @@ If you want to attest a user’s web data, create proofs, and implement verifica
 - Verifying the ownership of a user’s social media account, such as TikTok or X, to provide basic PoH capability.
 - And many more based on your needs...
 
-In this initial version, the attestable data source, attestation content, and supported blockchains are pre-designated. We will provide a developer platform in the future to allow developers to customize the data source and attestation content.
+In this initial version, the attestable data source, attestation content, and supported blockchains are pre-set. **A future developer platform will allow customization.**
 
 
 ## Workflows
 
 The basic workflows are as follows:
 
-![avatar](./assets/mpctls-sdk.png)
+![avatar](./../../pics/extensionSDK/mpctls-sdk.png)
 
-Integrating the PADO Extension is essential to complete the MPC-TLS process on the data source page that needs to be attested. When using the PADO MPC-TLS SDK, prompt users in your dApp to install the latest version (above 0.3.12) of the PADO Extension, as it is mandatory.
+**The PADO Extension is required to complete the MPC-TLS process on the data source page. When using the PADO MPC-TLS SDK, prompt users in your dApp to install the latest version (above 0.3.13) of the PADO Extension, as it is required.**
 
 **1. User Onboarding:** The user onboards to your dApp, connects their Wallet, and follows your instructions to initiate the data attestation process.
 
@@ -31,13 +31,13 @@ Integrating the PADO Extension is essential to complete the MPC-TLS process on t
 
 **5. Initiate zkAttestation Process:** The user needs to click the start button on the PADO Extension pop-up window to generate a zkAttestation process. 
 
-**6. Execute MPC-TLS Protocol:** After the zkAttestation process is initiated, the MPC-TLS protocol will be executed between the data source page, the PADO extension, and the PADO server to complete a privacy-preserving and verifiable data attestation process.
+**6. Execute MPC-TLS Protocol:** Once the zkAttestation process begins, the MPC-TLS protocol runs between the data source page, the PADO extension, and the PADO server to complete a privacy-preserving attestation process.
 
-**7.Return zkAttestation Result:** Once the zkAttestation process is completed, whether it succeeded or failed, the PADO Extension will acquire the result and return it to the PADO MPC-TLS SDK. For the failed tasks, we provide several [error codes](mpc-tls/mpc-tls-sdk/quickstart#errorCodes) to help you better identify and troubleshoot issues. 
+**7.Return zkAttestation Result:** After the zkAttestation process is complete, whether successful or not, the PADO Extension retrieves the result and sends it to the MPC-TLS SDK. For the failed tasks, we provide several [error codes](mpc-tls/mpc-tls-sdk/quickstart#errorCodes) to help you better identify and troubleshoot issues. 
 
 **8. Get and Verify the zkAttestation Result:** Your dApp will retrieve the zkAttestation result from the SDK and verify PADO's signature to confirm whether the result is trustworthy.
 
-**9. Business Logic:** Your dApp will execute business logic based on the proof that users obtain from the SDK. Your dApp will determine how to use the proof, whether to submit it on-chain, and how to use the proof.
+**9. Business Logic:** Your dApp will execute business logic based on the proof that users obtain from the SDK. Your dApp will determine how to use the proof, whether to submit it on-chain, and how to use it.
 
 
 ## zkAttestation Capabilities
@@ -71,8 +71,6 @@ For the attestation contract, we currently deployed EAS and Verax attestation sc
 
 If you have further needs for other blockchains, please contact us through our [community](https://discord.com/invite/pdrNxRrApX) for support.
 
-
-
 ## Basic Tutorials
 
 ### Step 1. Install MPC-TLS SDK
@@ -88,7 +86,7 @@ yarn add --save @padolabs/mpctls-js-sdk
 ```
 
 :::note
-_For better tech support, please contact the PADO team through our [community](https://discord.com/invite/pdrNxRrApX) after installing the MPC-TLS SDK. We need to register your dApps' domain to maintain the whitelist and provide you with a testing environment and the associated testing version of the PADO Extension._
+_**For better tech support, please contact the PADO team through our [community](https://discord.com/invite/pdrNxRrApX) after installing the MPC-TLS SDK. We need to register your dApps' domain to maintain the whitelist and provide you with a testing environment and the associated testing version of the PADO Extension.**_
 :::
 ### <a id="step2"></a>
 
@@ -96,7 +94,7 @@ _For better tech support, please contact the PADO team through our [community](h
 
 You must set up a **dAppSymbol (string)** of your dApp, this will be displayed on the PADO Extension - zkAttestation page as a mark of the proof that was completed by your dApp.
 
-![avatar](./assets/initialsdk.png)
+![avatar](./../../pics/extensionSDK/initialsdk.png)
 
 **Example:**
 
@@ -429,12 +427,12 @@ We have defined some error codes in the SDK. When an error occurs during the zkA
 | ---------- | ----------------------------------------------------------------------------- |
 | 00001      | The MPC-TLS algorithm has not been initialized. Please restart the process.  |
 | 00002      | The process did not respond within 5 minutes.                                 |
-| 00003      | An attestation process is currently being generated. Please try again later. |
+| 00003      | A zkAttestation process is currently being generated. Please try again later. |
 | 00004      | The user closes or cancels the attestation process.                             |
 | 00005      | Wrong parameters!                                                             |
-| 00006      | No PADO extension version 0.3.12 or above was detected as installed.          |
+| 00006      | No PADO extension version 0.3.13 or above was detected as installed.          |
 | 00007      | Insufficient wallet balance.                                                  |
-| 00008      | Failed to submit the proof on-chain. Or other errors in the MetaMask operations             |
+| 00008      | Failed to submit the proof on-chain. Or other errors in the Wallet operations.             |
 | 00009      | Your dApp is not registered. Please contact the PADO team.              |
 | 99999      | Undefined error. Contact the PADO team for further support                    |
 

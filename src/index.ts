@@ -196,6 +196,7 @@ export default class ZkAttestationJSSDK {
       });
      
     } catch (e: any) {
+      this._attestLoading = false
       return Promise.reject(e)
     }
   }
