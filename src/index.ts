@@ -73,9 +73,12 @@ export default class ZkAttestationJSSDK {
           }
           if (name === "initAttestationRes") {
             console.log('333 sdk receive initAttestationRes', event.data)
-            const { result, errorData } = params
+            const { result, data, errorData } = params
             if (result) {
               this.isInitialized = params?.result
+              if (data.attestationTypeIdList) {
+                this.supportedAttestationTypeList = data.attestationTypeIdList
+              }
               console.timeEnd('initAttestationCost')
               window?.removeEventListener('message', eventListener);
               resolve(true);
@@ -452,7 +455,7 @@ export default class ZkAttestationJSSDK {
   };
 
   _verifyAttestationParams(attestationParams: AttestationParams): boolean {
-    const { chainID, walletAddress, attestationTypeID, tokenSymbol, assetsBalance, followersNO } = attestationParams
+    const { chainID, walletAddress, attestationTypeID, tokenSymbol, assetsBalance, followersNO, spot30dTradeVol } = attestationParams
     const activeChainOption = this.supportedChainList.find((i:any) => i.value === chainID)
     if (!activeChainOption) {
       throw new ZkAttestationError('00005','Unsupported chainID!')
@@ -502,6 +505,19 @@ export default class ZkAttestationJSSDK {
         }
       }
     }
+
+    // binance okx spot30dTradeVol
+    if (['16', '17'].includes(attestationTypeID)) {
+      if (!spot30dTradeVol) {
+        throw new ZkAttestationError('00005','Missing spot30dTradeVol parameter!')
+      } else {
+        const valid = isValidNumberString(spot30dTradeVol)
+        if (!valid) {
+          throw new ZkAttestationError('00005','The input value of  "spot30dTradeVol" is incorrect, should be restricted to a 6-decimal-place number and the minimum value is 0.000001')
+        }
+      }
+    }
+    
 
     return true
   }

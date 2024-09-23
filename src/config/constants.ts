@@ -474,4 +474,12 @@ export const ATTESTATIONTYPEIDLIST = [
     text: "X social connections",
     value: "15",
   },
+  {
+    text: "binance spot 30d trade vol",
+    value: "16",
+  },
+  {
+    text: "okx spot 30d trade vol",
+    value: "17",
+  },
 ]
