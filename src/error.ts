@@ -1,5 +1,5 @@
 export type AttestationErrorCode =
-  "00001" | "00002" | '00003' | "00004" | '00005' | '00006' | "00009" |
+  "00001" | "00002" | '00003' | "00004" | '00005' | '00006' | "00009" | "00010" |
   "00101" | "00102" | "00103" | "00104" |
   "10001" | "10002" | "10003" | "10004" |
   "20001" | "20002" | "20003" | "20004" | "20005" |
@@ -23,6 +23,7 @@ export const ErrorCodeMAP = {
   '00007':'Insufficient wallet balance.',
   '00008':'Failed to submit the proof on-chain. Or other errors in the Wallet operations.',
   '00009':'Your dApp is not registered. Please contact the PADO team.',
+  '00010':'Verification failed. Please try again later.',
   '99999':'Undefined error. Contact the PADO team for further support',
   '00102':'Insufficient assets balance in your Binance Spot Account.',
   '00104': 'Your attestation request did not meet the necessary requirements.',

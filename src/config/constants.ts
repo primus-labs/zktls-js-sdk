@@ -482,4 +482,8 @@ export const ATTESTATIONTYPEIDLIST = [
     text: "okx spot 30d trade vol",
     value: "17",
   },
+  {
+    text: "Has transactions on BNB Chain since 2024 July",
+    value: "101",
+  },
 ]

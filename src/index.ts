@@ -73,12 +73,12 @@ export default class ZkAttestationJSSDK {
           }
           if (name === "initAttestationRes") {
             console.log('333 sdk receive initAttestationRes', event.data)
-            const { result, data, errorData } = params
+            const { result, errorData } = params
             if (result) {
               this.isInitialized = params?.result
-              if (data.attestationTypeIdList) {
-                this.supportedAttestationTypeList = data.attestationTypeIdList
-              }
+              // if (data?.attestationTypeIdList) {
+              //   this.supportedAttestationTypeList = data.attestationTypeIdList
+              // }
               console.timeEnd('initAttestationCost')
               window?.removeEventListener('message', eventListener);
               resolve(true);
@@ -185,8 +185,13 @@ export default class ZkAttestationJSSDK {
                 clearTimeout(timeoutTimer)
                 console.timeEnd('startAttestCost')
                 window?.removeEventListener('message', eventListener);
-                const { code } = errorData
-                reject(new ZkAttestationError(code))
+                const { code, desc } = errorData
+                if (attestationParams?.attestationTypeID === '101') {
+                  reject(new ZkAttestationError(code, desc))
+                } else {
+                  reject(new ZkAttestationError(code))
+                }
+                
                 // if (params.reStartFlag) {
                 //   await this.initAttestation(this._dappSymbol)
                 //   console.log('333-reStartFlag')
@@ -455,7 +460,7 @@ export default class ZkAttestationJSSDK {
   };
 
   _verifyAttestationParams(attestationParams: AttestationParams): boolean {
-    const { chainID, walletAddress, attestationTypeID, tokenSymbol, assetsBalance, followersNO, spot30dTradeVol } = attestationParams
+    const { chainID, walletAddress, attestationTypeID, tokenSymbol, assetsBalance, followersNO, spot30dTradeVol,signature,timestamp } = attestationParams
     const activeChainOption = this.supportedChainList.find((i:any) => i.value === chainID)
     if (!activeChainOption) {
       throw new ZkAttestationError('00005','Unsupported chainID!')
@@ -516,6 +521,22 @@ export default class ZkAttestationJSSDK {
           throw new ZkAttestationError('00005','The input value of  "spot30dTradeVol" is incorrect, should be restricted to a 6-decimal-place number and the minimum value is 0.000001')
         }
       }
+    }
+
+    // Has transactions on BNB Chain since 2024 July
+    if (['101'].includes(attestationTypeID)) {
+      if (!signature) {
+        throw new ZkAttestationError('00005','Missing signature parameter!')
+      }
+      if (!timestamp) {
+        throw new ZkAttestationError('00005','Missing timestamp parameter!')
+      }
+      // else {
+      //   const valid = isValidNumberString(spot30dTradeVol)
+      //   if (!valid) {
+      //     throw new ZkAttestationError('00005','The input value of  "spot30dTradeVol" is incorrect, should be restricted to a 6-decimal-place number and the minimum value is 0.000001')
+      //   }
+      // }
     }
     
 

@@ -6,6 +6,8 @@ export type AttestationParams = {
   assetsBalance?: string;
   followersNO?: string;
   spot30dTradeVol?: string;
+  signature?: string;
+  timestamp?: string;
 }
 export type ChainOption = {
   text: string;
