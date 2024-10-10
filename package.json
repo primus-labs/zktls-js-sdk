@@ -1,25 +1,23 @@
 {
-  "name": "@padolabs/mpctls-js-sdk",
-  "version": "0.1.0",
-  "author": "PADO Labs <dev@padolabs.org>",
-  "description": "pado mpc-tls js sdk",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/pado-labs/mpctls-js-sdk.git"
-  },
+  "name": "@superorange/zka-js-sdk",
+  "version": "1.0.65",
+  "author": "",
+  "description": "",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
-  "files": [
-    "./dist"
-  ],
+  "files": ["./dist"],
   "scripts": {
-    "build": "rm -rf dist && tsc --build tsconfig.json",
-    "build:test": "rm -rf dist && tsc --build tsconfig.json",
+    "build": "NODE_ENV=production rm -rf dist && tsc --build tsconfig.json",
+    "build:test": "NODE_ENV=development rm -rf dist && tsc --build tsconfig.json",
     "lint": "eslint -c .eslintrc --ext .ts src",
     "format": "prettier --check --write src/**/*.ts  --config .prettierrc",
     "pretest:integration": "npm run build && npm link",
     "publish": "npm publish --access public",
     "test": "jest"
+  },
+  "dependencies": {
+    "@ethereum-attestation-service/eas-sdk": "^0.29.0",
+    "ethers": "5.7.2"
   },
   "devDependencies": {
     "@types/jest": "^29.5.12",
@@ -35,21 +33,14 @@
     "ts-jest": "^29.1.4",
     "ts-node": "^10.9.2",
     "tslib": "^2.6.2",
-    "typescript": "^5.4.5"
+    "typescript": "^5.4.5",
+    "webpack": "^5.94.0"
   },
   "jest": {
     "transform": {
       "^.+\\.(ts|tsx)$": "ts-jest"
     },
     "testRegex": "(/__tests__/.*|(\\.|/)(test|spec))\\.(ts|tsx|js)$",
-    "moduleFileExtensions": [
-      "ts",
-      "tsx",
-      "js"
-    ]
-  },
-  "dependencies": {
-    "@ethereum-attestation-service/eas-sdk": "^2.6.0",
-    "ethers": "^5.7.2"
+    "moduleFileExtensions": ["ts", "tsx", "js"]
   }
 }

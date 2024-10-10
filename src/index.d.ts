@@ -2,12 +2,13 @@ export type AttestationParams = {
   chainID: number;
   walletAddress: string;
   attestationTypeID: string;
-  tokenSymbol?: string;
-  assetsBalance?: string;
-  followersNO?: string;
-  spot30dTradeVol?: string;
-  signature?: string;
-  timestamp?: string;
+  // tokenSymbol?: string;
+  // assetsBalance?: string;
+  // followersNO?: string;
+  // spot30dTradeVol?: string;
+  // signature?: string;
+  // timestamp?: string;
+  attestationParameters: any[];
 }
 export type ChainOption = {
   text: string;

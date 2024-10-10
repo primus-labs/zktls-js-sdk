@@ -483,7 +483,7 @@ export const ATTESTATIONTYPEIDLIST = [
     value: "17",
   },
   {
-    text: "Has transactions on BNB Chain since 2024 July",
+    text: "On-chain transactions on BNB Chain since 2024 July",
     value: "101",
   },
 ]

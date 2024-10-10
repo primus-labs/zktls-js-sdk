@@ -4,7 +4,7 @@ import { ZERO_BYTES32 } from '@ethereum-attestation-service/eas-sdk';
 import { ATTESTATIONPOLLINGTIME, ATTESTATIONPOLLINGTIMEOUT, ATTESTATIONTYPEIDLIST, PADOADDRESSMAP, EASINFOMAP } from "./config/constants";
 import { lineaportalabi } from './config/lineaportalabi';
 import { proxyabi } from './config/proxyabi';
-import { isValidNumericString, isValidLetterString, isValidNumberString } from './utils'
+import { isValidNumericString, isValidLetterString, isValidNumberString, isValidTimestampString } from './utils'
 import { AttestationParams, ChainOption, StartAttestationReturnParams,AttestationTypeOption,Env} from './index.d'
 import { ZkAttestationError } from './error'
 export default class ZkAttestationJSSDK {
@@ -113,10 +113,12 @@ export default class ZkAttestationJSSDK {
       const vaildResult = this._verifyAttestationParams(attestationParams)
       console.log('333-sdk-startAttestation-vaildResult', vaildResult)
       await this.initAttestation(this._dappSymbol)
-      let formatParams:any = { ...attestationParams, dappSymbol:this._dappSymbol }
-      if (formatParams['tokenSymbol']) {
-        formatParams['tokenSymbol'] = formatParams['tokenSymbol'].toUpperCase()
+      let formatParams: any = { ...attestationParams, attestationParameters: attestationParams.attestationParameters || [],dappSymbol: this._dappSymbol }
+      
+      if (['10', '12'].includes(formatParams.attestationTypeID) && formatParams.attestationParameters?.[0]) {
+        formatParams.attestationParameters[0] = formatParams.attestationParameters[0].toUpperCase()
       }
+      
       if (formatParams['chainID']) {
         const chainMetaInfo = Object.values(this._easInfo).find((i:any) => formatParams['chainID'] === parseInt(i.chainId))
         formatParams['chainName'] = (chainMetaInfo as any).title
@@ -460,7 +462,8 @@ export default class ZkAttestationJSSDK {
   };
 
   _verifyAttestationParams(attestationParams: AttestationParams): boolean {
-    const { chainID, walletAddress, attestationTypeID, tokenSymbol, assetsBalance, followersNO, spot30dTradeVol,signature,timestamp } = attestationParams
+    const { chainID, walletAddress, attestationTypeID, attestationParameters } = attestationParams
+    const [ attestationParameter1, attestationParameter2] = attestationParameters
     const activeChainOption = this.supportedChainList.find((i:any) => i.value === chainID)
     if (!activeChainOption) {
       throw new ZkAttestationError('00005','Unsupported chainID!')
@@ -477,69 +480,69 @@ export default class ZkAttestationJSSDK {
     }
 
     if (['9', '11'].includes(attestationTypeID)) {
-      if (!assetsBalance) {
-        throw new ZkAttestationError('00005','Missing assetsBalance parameter!')
+      if (!attestationParameter1) {
+        throw new ZkAttestationError('00005','Missing attestationParameter, USD value.')
       } else {
-        const valid = isValidNumberString(assetsBalance)
+        const valid = isValidNumberString(attestationParameter1)
         if (!valid) {
-          throw new ZkAttestationError('00005','The input value of  "assetsBalance" is incorrect, should be restricted to a 6-decimal-place number and the minimum value is 0.000001')
+          throw new ZkAttestationError('00005','Input "assetsBalance" value is incorrect, should be restricted to a 6-decimal-place number and the minimum value is 0.000001.')
         }
       }
     }
 
     // binance Token Holding ,okx Token Holding
     if (['10', '12'].includes(attestationTypeID)) {
-      if (!tokenSymbol) {
-        throw new ZkAttestationError('00005','Missing tokenSymbol parameter!')
+      if (!attestationParameter1) {
+        throw new ZkAttestationError('00005','Missing attestationParameter, token symbol.')
       } else {
-        const valid = isValidLetterString(tokenSymbol)
+        const valid = isValidLetterString(attestationParameter1)
         if (!valid) {
-          throw new ZkAttestationError('00005','The input value of "tokenSymbol" is incorrect, should only be alphabet .')
+          throw new ZkAttestationError('00005','Input "tokenSymbol" value is incorrect, should only be alphabet.')
         }
       }
     }
 
     // X Followers
     if (['15'].includes(attestationTypeID)) {
-      if (!followersNO) {
-        throw new ZkAttestationError('00005','Missing followersNO parameter!')
+      if (!attestationParameter1) {
+        throw new ZkAttestationError('00005','Missing attestationParameter, followers number.')
       } else {
-        const valid = isValidNumericString(followersNO)
+        const valid = isValidNumericString(attestationParameter1)
         if (!valid) {
-          throw new ZkAttestationError('00005','The input value of "followersNO" is incorrect. should only be numeric and the minimum value is 0.')
+          throw new ZkAttestationError('00005','Input "followersNO" value is incorrect, should only be numeric and the minimum value is 0.')
         }
       }
     }
 
     // binance okx spot30dTradeVol
     if (['16', '17'].includes(attestationTypeID)) {
-      if (!spot30dTradeVol) {
-        throw new ZkAttestationError('00005','Missing spot30dTradeVol parameter!')
+      if (!attestationParameter1) {
+        throw new ZkAttestationError('00005','Missing attestationParameter, USD value.')
       } else {
-        const valid = isValidNumberString(spot30dTradeVol)
+        const valid = isValidNumberString(attestationParameter1)
         if (!valid) {
-          throw new ZkAttestationError('00005','The input value of  "spot30dTradeVol" is incorrect, should be restricted to a 6-decimal-place number and the minimum value is 0.000001')
+          throw new ZkAttestationError('00005','Input "spot30dTradeVol" value is incorrect, should be restricted to a 6-decimal-place number and the minimum value is 0.000001.')
         }
       }
     }
 
     // Has transactions on BNB Chain since 2024 July
     if (['101'].includes(attestationTypeID)) {
-      if (!signature) {
-        throw new ZkAttestationError('00005','Missing signature parameter!')
+      if (!attestationParameter1) {
+        throw new ZkAttestationError('00005','Incorrect attestationParameter. The input should follow this order: first, ‘user signature’; second, ‘timestamp’.')
+      } else {
+        if (!utils.isHexString(attestationParameter1)) {
+          throw new ZkAttestationError('00005','Input "signature" is incorrect.')
+        }
       }
-      if (!timestamp) {
-        throw new ZkAttestationError('00005','Missing timestamp parameter!')
+      if (!attestationParameter2) {
+        throw new ZkAttestationError('00005','Incorrect attestationParameter. The input should follow this order: first, ‘user signature’; second, ‘timestamp’.')
+      } else {
+        if (!isValidTimestampString(attestationParameter2)) {
+          throw new ZkAttestationError('00005','Input "timestamp" is incorrect.')
+        }
       }
-      // else {
-      //   const valid = isValidNumberString(spot30dTradeVol)
-      //   if (!valid) {
-      //     throw new ZkAttestationError('00005','The input value of  "spot30dTradeVol" is incorrect, should be restricted to a 6-decimal-place number and the minimum value is 0.000001')
-      //   }
-      // }
     }
-    
-
     return true
   }
 
