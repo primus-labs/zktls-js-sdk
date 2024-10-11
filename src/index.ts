@@ -20,23 +20,25 @@ export default class ZkAttestationJSSDK {
   supportedChainList: ChainOption[]
   supportedAttestationTypeList: AttestationTypeOption[]
 
-  constructor( env?: '' | '') {
+  constructor() {
     this._dappSymbol = ''
     this.isInitialized = false
     this.isInstalled = false
     this.supportedAttestationTypeList = ATTESTATIONTYPEIDLIST
     this.supportedChainList = []
-    this._padoAddress = ''
+    
     this._easInfo = {}
     this._attestLoading = false
     this._sendToChainLoading = false
     this._verifyLoading = false
-    if (env && ['development', 'test'].includes(env)) {
-      this._env = 'development'
-    } else {
-      this._env = 'production'
-    }
-    this._initEnvProperties()
+    this._env = 'production'
+    this._padoAddress = (PADOADDRESSMAP as any)[this._env]
+    // if (env && ['development', 'test'].includes(env)) {
+    //   this._env = 'development'
+    // } else {
+    //   this._env = 'production'
+    // }
+    this._getSupportedChainList()
   }
   
   initAttestation(dappSymbol: string): Promise<boolean> {
@@ -48,14 +50,14 @@ export default class ZkAttestationJSSDK {
     });
     console.time('checkIsInstalledCost')
     console.time('initAttestationCost')
-    return new Promise((resolve,reject) => {
+    return new Promise((resolve, reject) => {
       const tickerTimer = setTimeout(() => {
         if (!this.isInstalled) {
           window?.removeEventListener('message', eventListener);
           const errorCode = '00006'
           reject(new ZkAttestationError(
-                errorCode
-              ))
+            errorCode
+          ))
         }
       }, 500)
       const eventListener = (event: any) => {
@@ -112,15 +114,16 @@ export default class ZkAttestationJSSDK {
       this._verifyAttestationParams(attestationParams);
       const vaildResult = this._verifyAttestationParams(attestationParams)
       console.log('333-sdk-startAttestation-vaildResult', vaildResult)
+      this._initEnvProperties(attestationParams.chainID)
       await this.initAttestation(this._dappSymbol)
-      let formatParams: any = { ...attestationParams, attestationParameters: attestationParams.attestationParameters || [],dappSymbol: this._dappSymbol }
+      let formatParams: any = { ...attestationParams, attestationParameters: attestationParams.attestationParameters || [], dappSymbol: this._dappSymbol }
       
       if (['10', '12'].includes(formatParams.attestationTypeID) && formatParams.attestationParameters?.[0]) {
         formatParams.attestationParameters[0] = formatParams.attestationParameters[0].toUpperCase()
       }
       
       if (formatParams['chainID']) {
-        const chainMetaInfo = Object.values(this._easInfo).find((i:any) => formatParams['chainID'] === parseInt(i.chainId))
+        const chainMetaInfo = Object.values(this._easInfo).find((i: any) => formatParams['chainID'] === parseInt(i.chainId))
         formatParams['chainName'] = (chainMetaInfo as any).title
       }
       // console.log('333-sdk-startAttestation-params',formatParams )
@@ -131,7 +134,7 @@ export default class ZkAttestationJSSDK {
         params: formatParams,
       });
       console.time('startAttestCost')
-      return new Promise((resolve,reject) => {
+      return new Promise((resolve, reject) => {
         let pollingTimer: any
         let timeoutTimer: any
         const eventListener = async (event: any) => {
@@ -169,7 +172,7 @@ export default class ZkAttestationJSSDK {
               }
             }
             if (name === "startAttestationRes") {
-              const { result, data, errorData} = params
+              const { result, data, errorData } = params
               console.log('333-sdk-receive getAttestationResultRes', params)
               this._attestLoading = false
               if (result) {
@@ -233,7 +236,7 @@ export default class ZkAttestationJSSDK {
       console.time('sendToChainCost')
       const onChainRes = await this._attestByDelegationProxyFee(startAttestationReturnParams, chainObj, wallet)
       console.timeEnd('sendToChainCost')
-      const {attestationRequestId} = startAttestationReturnParams
+      const { attestationRequestId } = startAttestationReturnParams
       window.postMessage({
         target: "padoExtension",
         origin: "padoZKAttestationJSSDK",
@@ -249,26 +252,26 @@ export default class ZkAttestationJSSDK {
       if (onChainRes) {
         if (onChainRes.error) {
           if (onChainRes.error === 1) {
-            const errorCode ='00007'
+            const errorCode = '00007'
             return Promise.reject(new ZkAttestationError(errorCode))
              
           } else if (onChainRes.error === 2) {
-            const errorCode ='00008'
-            return Promise.reject(new ZkAttestationError(errorCode ,onChainRes.message))
+            const errorCode = '00008'
+            return Promise.reject(new ZkAttestationError(errorCode, onChainRes.message))
           }
-          const errorCode ='00008'
-            return Promise.reject(new ZkAttestationError(errorCode))
+          const errorCode = '00008'
+          return Promise.reject(new ZkAttestationError(errorCode))
         }
         const chainInfo = this._easInfo[chainName] as any;
-        if (chainName === 'opBNB') {
+        if (chainName.startsWith('opBNB') ) {
           return `${chainInfo.bucketDetailUrl}${onChainRes}`;
         } else {
           return `${chainInfo?.transactionDetailUrl}/${onChainRes}`;
         }
       } else {
         this._sendToChainLoading = false
-        const errorCode ='00008'
-          return Promise.reject(new ZkAttestationError(errorCode))
+        const errorCode = '00008'
+        return Promise.reject(new ZkAttestationError(errorCode))
       }
     } catch (e: any) {
       console.log('333-sdk-sendToChain error', e)
@@ -287,7 +290,7 @@ export default class ZkAttestationJSSDK {
     this._verifyLoading = true
     console.time('verifyAttestationCost')
     const { domain, message, signature, types } = startAttestationReturnParams.eip712MessageRawDataWithSignature
-    let formatDomain:any = {...domain}
+    let formatDomain: any = { ...domain }
     delete formatDomain.salt;
     const result = utils.verifyTypedData(
       formatDomain,
@@ -302,7 +305,7 @@ export default class ZkAttestationJSSDK {
     return verifyResult
   }
   async _getFee(chainName: string, wallet: any): Promise<any> {
-    const contractAddress = (this._easInfo  as { [key: string]: any })[chainName].easProxyFeeContract;
+    const contractAddress = (this._easInfo as { [key: string]: any })[chainName].easProxyFeeContract;
     const abi = ['function fee() public view returns(uint256)'];
     let provider = new ethers.providers.Web3Provider(wallet);
     const contract = new ethers.Contract(contractAddress, abi, provider);
@@ -313,7 +316,7 @@ export default class ZkAttestationJSSDK {
   }
   async _attestByDelegationProxyFee(startAttestationReturnParams: StartAttestationReturnParams, chainObj: any, wallet: any): Promise<any> {
     const metamaskprovider = wallet
-    const { chainName,eip712MessageRawDataWithSignature } = startAttestationReturnParams
+    const { chainName, eip712MessageRawDataWithSignature } = startAttestationReturnParams
     const { message: { data, recipient, schema }, signature } = eip712MessageRawDataWithSignature
     const easProxyFeeContractAddress = chainObj.easProxyFeeContract;
     let provider = new ethers.providers.Web3Provider(metamaskprovider);
@@ -416,7 +419,7 @@ export default class ZkAttestationJSSDK {
     }
   }
 
-  async _switchChain(chainObj: any, wallet:any) {
+  async _switchChain(chainObj: any, wallet: any) {
     const { chainId, chainName: formatChainName, rpcUrls, blockExplorerUrls, nativeCurrency } = chainObj
     const provider = wallet
     const connectedChainId = await provider.request({ method: 'eth_chainId' });
@@ -463,29 +466,29 @@ export default class ZkAttestationJSSDK {
 
   _verifyAttestationParams(attestationParams: AttestationParams): boolean {
     const { chainID, walletAddress, attestationTypeID, attestationParameters } = attestationParams
-    const [ attestationParameter1, attestationParameter2] = attestationParameters
-    const activeChainOption = this.supportedChainList.find((i:any) => i.value === chainID)
+    const [attestationParameter1, attestationParameter2] = attestationParameters
+    const activeChainOption = this.supportedChainList.find((i: any) => i.value === chainID)
     if (!activeChainOption) {
-      throw new ZkAttestationError('00005','Unsupported chainID!')
+      throw new ZkAttestationError('00005', 'Unsupported chainID!')
     }
 
     const isAddressVaild = utils.isAddress(walletAddress)
     if (!isAddressVaild) {
-      throw new ZkAttestationError('00005','The wallet address is incorrect!')
+      throw new ZkAttestationError('00005', 'The wallet address is incorrect!')
     }
 
     const activeAttestationTypeOption = this.supportedAttestationTypeList.find(i => i.value === attestationTypeID)
     if (!activeAttestationTypeOption) {
-      throw new ZkAttestationError('00005','Wrong attestationTypeID!')
+      throw new ZkAttestationError('00005', 'Wrong attestationTypeID!')
     }
 
     if (['9', '11'].includes(attestationTypeID)) {
       if (!attestationParameter1) {
-        throw new ZkAttestationError('00005','Missing attestationParameter, USD value.')
+        throw new ZkAttestationError('00005', 'Missing attestationParameter, USD value.')
       } else {
         const valid = isValidNumberString(attestationParameter1)
         if (!valid) {
-          throw new ZkAttestationError('00005','Input "assetsBalance" value is incorrect, should be restricted to a 6-decimal-place number and the minimum value is 0.000001.')
+          throw new ZkAttestationError('00005', 'Input "assetsBalance" value is incorrect, should be restricted to a 6-decimal-place number and the minimum value is 0.000001.')
         }
       }
     }
@@ -493,11 +496,11 @@ export default class ZkAttestationJSSDK {
     // binance Token Holding ,okx Token Holding
     if (['10', '12'].includes(attestationTypeID)) {
       if (!attestationParameter1) {
-        throw new ZkAttestationError('00005','Missing attestationParameter, token symbol.')
+        throw new ZkAttestationError('00005', 'Missing attestationParameter, token symbol.')
       } else {
         const valid = isValidLetterString(attestationParameter1)
         if (!valid) {
-          throw new ZkAttestationError('00005','Input "tokenSymbol" value is incorrect, should only be alphabet.')
+          throw new ZkAttestationError('00005', 'Input "tokenSymbol" value is incorrect, should only be alphabet.')
         }
       }
     }
@@ -505,11 +508,11 @@ export default class ZkAttestationJSSDK {
     // X Followers
     if (['15'].includes(attestationTypeID)) {
       if (!attestationParameter1) {
-        throw new ZkAttestationError('00005','Missing attestationParameter, followers number.')
+        throw new ZkAttestationError('00005', 'Missing attestationParameter, followers number.')
       } else {
         const valid = isValidNumericString(attestationParameter1)
         if (!valid) {
-          throw new ZkAttestationError('00005','Input "followersNO" value is incorrect, should only be numeric and the minimum value is 0.')
+          throw new ZkAttestationError('00005', 'Input "followersNO" value is incorrect, should only be numeric and the minimum value is 0.')
         }
       }
     }
@@ -517,11 +520,11 @@ export default class ZkAttestationJSSDK {
     // binance okx spot30dTradeVol
     if (['16', '17'].includes(attestationTypeID)) {
       if (!attestationParameter1) {
-        throw new ZkAttestationError('00005','Missing attestationParameter, USD value.')
+        throw new ZkAttestationError('00005', 'Missing attestationParameter, USD value.')
       } else {
         const valid = isValidNumberString(attestationParameter1)
         if (!valid) {
-          throw new ZkAttestationError('00005','Input "spot30dTradeVol" value is incorrect, should be restricted to a 6-decimal-place number and the minimum value is 0.000001.')
+          throw new ZkAttestationError('00005', 'Input "spot30dTradeVol" value is incorrect, should be restricted to a 6-decimal-place number and the minimum value is 0.000001.')
         }
       }
     }
@@ -529,35 +532,53 @@ export default class ZkAttestationJSSDK {
     // Has transactions on BNB Chain since 2024 July
     if (['101'].includes(attestationTypeID)) {
       if (!attestationParameter1) {
-        throw new ZkAttestationError('00005','Incorrect attestationParameter. The input should follow this order: first, ‘user signature’; second, ‘timestamp’.')
+        throw new ZkAttestationError('00005', 'Incorrect attestationParameter. The input should follow this order: first, ‘user signature’; second, ‘timestamp’.')
       } else {
         if (!utils.isHexString(attestationParameter1)) {
-          throw new ZkAttestationError('00005','Input "signature" is incorrect.')
+          throw new ZkAttestationError('00005', 'Input "signature" is incorrect.')
         }
       }
       if (!attestationParameter2) {
-        throw new ZkAttestationError('00005','Incorrect attestationParameter. The input should follow this order: first, ‘user signature’; second, ‘timestamp’.')
+        throw new ZkAttestationError('00005', 'Incorrect attestationParameter. The input should follow this order: first, ‘user signature’; second, ‘timestamp’.')
       } else {
         if (!isValidTimestampString(attestationParameter2)) {
-          throw new ZkAttestationError('00005','Input "timestamp" is incorrect.')
+          throw new ZkAttestationError('00005', 'Input "timestamp" is incorrect.')
         }
       }
     }
     return true
   }
 
-  _initEnvProperties() {
-    this.supportedChainList = Object.values((EASINFOMAP as any)[this._env]).map((i:any) => ({
+  _getSupportedChainList() {
+    const allEnvEASINFOMAP = Object.values((EASINFOMAP as any)).reduce(
+      (prev: any, curr: any) => {
+        Object.assign(prev, curr)
+        return prev
+      }, {})
+    this.supportedChainList = Object.values(allEnvEASINFOMAP as any).map((i: any) =>
+    ({
       text: i.officialName,
       value: parseInt(i.chainId)
     }));
-    this._padoAddress = (PADOADDRESSMAP as any)[this._env]
-    this._easInfo = (EASINFOMAP as any)[this._env]
-    console.log('333-sdk-env:',this._env, this.supportedChainList, this._easInfo )
+    console.log('333-sdk-supportedChainList:', this.supportedChainList)
   }
+  _initEnvProperties(chainID: number) {
+    Object.keys((EASINFOMAP as any)).forEach((envKey: any) => {
+      const envEasInfoMap = (EASINFOMAP as any)[envKey]
+      const isCurEnv = Object.values(envEasInfoMap).find((info: any) => parseInt(info.chainId) === chainID)
+      if (isCurEnv) {
+        this._env = envKey
+      }
+    })
+    this._easInfo = (EASINFOMAP as any)[this._env]
+    this._padoAddress = (PADOADDRESSMAP as any)[this._env]
+    console.log('333-sdk-env:', this._env, this._easInfo)
+  }
+  
 }
 
 
 
 
 
+ 

@@ -1,6 +1,6 @@
 {
   "name": "@superorange/zka-js-sdk",
-  "version": "1.0.65",
+  "version": "1.0.70",
   "author": "",
   "description": "",
   "main": "./dist/index.js",

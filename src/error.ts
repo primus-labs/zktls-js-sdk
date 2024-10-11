@@ -25,7 +25,7 @@ export const ErrorCodeMAP = {
   '00009':'Your dApp is not registered. Please contact the PADO team.',
   '00010':'Verification failed. Please try again later.',
   '99999':'Undefined error. Contact the PADO team for further support',
-  '00102':'Insufficient assets balance in your Binance Spot Account.',
+  '00102':'Insufficient assets balance in Binance Spot Account.',
   '00104': 'Your attestation request did not meet the necessary requirements.',
   '10001':'The internet condition is not stable enough to complete the zkAttestation flow. Please try again later.',
   '10002':'The attestation process has been interrupted due to some unknown network error. Please try again later.',
