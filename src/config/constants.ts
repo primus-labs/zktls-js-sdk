@@ -17,7 +17,7 @@ export const PADOADDRESS = PADOADDRESSMAP[CURENV];
 export const EASINFOMAP = {
   development: {
     'Scroll Sepolia': {
-      officialName: 'Scroll Sepolia Testnet',
+      officialName: 'Scroll Sepolia',
       showName: 'Scroll',
       // icon: iconNetworkScroll,
       title: 'Scroll Sepolia',
@@ -101,7 +101,7 @@ export const EASINFOMAP = {
       transactionDetailUrl: 'https://sepolia.easscan.org/attestation/view',
     },
     BSCTestnet: {
-      officialName:'BNB Smart Chain Testnet',
+      officialName:'BNB Testnet',
       showName: 'BNB Chain',
       // icon: iconBinance,
       title: 'BSCTestnet',
