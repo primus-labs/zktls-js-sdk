@@ -17,8 +17,9 @@ export default class ZkAttestationJSSDK {
   private _verifyLoading: boolean;
   isInstalled?: boolean;
   isInitialized: boolean;
-  supportedChainList: ChainOption[]
-  supportedAttestationTypeList: AttestationTypeOption[]
+  supportedChainList: ChainOption[];
+  supportedAttestationTypeList: AttestationTypeOption[];
+  padoExtensionVersion: string;
 
   constructor() {
     this._dappSymbol = ''
@@ -33,6 +34,7 @@ export default class ZkAttestationJSSDK {
     this._verifyLoading = false
     this._env = 'production'
     this._padoAddress = (PADOADDRESSMAP as any)[this._env]
+    this.padoExtensionVersion = ''
     // if (env && ['development', 'test'].includes(env)) {
     //   this._env = 'development'
     // } else {
@@ -41,7 +43,7 @@ export default class ZkAttestationJSSDK {
     this._getSupportedChainList()
   }
   
-  initAttestation(dappSymbol: string): Promise<boolean> {
+  initAttestation(dappSymbol: string): Promise<string> {
     this._dappSymbol = dappSymbol
     window.postMessage({
       target: "padoExtension",
@@ -75,15 +77,18 @@ export default class ZkAttestationJSSDK {
           }
           if (name === "initAttestationRes") {
             console.log('333 sdk receive initAttestationRes', event.data)
-            const { result, errorData } = params
+            const { result, errorData, data } = params
             if (result) {
               this.isInitialized = params?.result
               // if (data?.attestationTypeIdList) {
               //   this.supportedAttestationTypeList = data.attestationTypeIdList
               // }
+              if (data?.padoExtensionVersion) {
+                this.padoExtensionVersion = data.padoExtensionVersion
+              }
               console.timeEnd('initAttestationCost')
               window?.removeEventListener('message', eventListener);
-              resolve(true);
+              resolve(this.padoExtensionVersion);
             } else {
               window?.removeEventListener('message', eventListener);
               // console.log('333-sdk-initAttestationRes-errorData:',errorData)

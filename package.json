@@ -1,6 +1,6 @@
 {
   "name": "@padolabs/mpctls-js-sdk",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "author": "PADO Labs <dev@padolabs.org>",
   "description": "pado mpc-tls js sdk",
   "repository": {

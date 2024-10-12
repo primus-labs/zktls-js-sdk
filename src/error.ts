@@ -60,7 +60,7 @@ export class ZkAttestationError {
   code: ErrorCode;
   message: string;
   constructor(code: ErrorCode, message?: string) {
-    this.message = message ?? ErrorCodeMAP[code as keyof typeof ErrorCodeMAP];
+    this.message = message || ErrorCodeMAP[code as keyof typeof ErrorCodeMAP];
     this.code = code;
   }
 }
