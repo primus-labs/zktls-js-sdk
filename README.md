@@ -9,8 +9,7 @@ You can find more detailed information through the following two links.
 - [Quick Start](https://docs.padolabs.org/mpc-tls/mpc-tls-sdk/quickstart)
 
 
-
-**Note**
+## Note
 
 - We need to register your dApps' domain to maintain the whitelist for production usage. If you are only debugging locally, simply follow the [Quick Start](https://docs.padolabs.org/mpc-tls/mpc-tls-sdk/quickstart) instructions to complete the integration. 
 
