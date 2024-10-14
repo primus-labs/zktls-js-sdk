@@ -19,7 +19,7 @@ export const ErrorCodeMAP = {
   '00003':'A zkAttestation process is currently being generated. Please try again later.',
   '00004':'The user closes or cancels the attestation process.',
   '00005':'Wrong parameters!',
-  '00006':'No PADO extension version 0.3.14 or above was detected as installed.',
+  '00006':'No PADO extension version 0.3.15 or above was detected as installed.',
   '00007':'Insufficient wallet balance.',
   '00008':'Failed to submit the proof on-chain. Or other errors in the Wallet operations.',
   '00009':'Your dApp is not registered. Please contact the PADO team.',
