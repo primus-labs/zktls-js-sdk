@@ -551,6 +551,13 @@ export default class ZkAttestationJSSDK {
         }
       }
     }
+
+    // ChatGPT conversation proof
+    if (['19'].includes(attestationTypeID)) {
+      if ( attestationParameter1 && typeof attestationParameter1 !== 'string') {
+        throw new ZkAttestationError('00005', 'Input "keywords" value is incorrect, should be string.')
+      }
+    }
     return true
   }
 

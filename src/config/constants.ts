@@ -2,7 +2,7 @@ export const PADOEXTENSIONID = "oeiomhmbaapihbilkfkhmlajkeegnjhe";
 
 export const ONESECOND = 1000;
 export const ONEMINUTE = 60 * ONESECOND;
-export const ATTESTATIONPOLLINGTIME = 3 * ONESECOND;
+export const ATTESTATIONPOLLINGTIME = 1 * ONESECOND;
 export const ATTESTATIONPOLLINGTIMEOUT = 5 * ONEMINUTE;
 // const CURENV  = process.env.NODE_ENV
 const CURENV  = 'production'
@@ -16,6 +16,39 @@ export const PADOADDRESS = PADOADDRESSMAP[CURENV];
 
 export const EASINFOMAP = {
   development: {
+    'Holesky': {
+      officialName: 'Holesky',
+      showName: 'Holesky',
+      title: 'Holesky',
+      rpcUrl: 'https://rpc.holesky.ethpandaops.io/',
+      erc721Contract: '',
+      easContact: '',
+      easProxyContrac: '',
+      easProxyFeeContract: '0x1d80000C682CF9FfA91A4d2C5Db505f6C5963327',
+      schemas: {
+        'Verax-Holesky': {
+          schemaUid:
+            '',
+          schemaUidTokenHoldings:
+            '',
+          schemaUidIdentification:
+            '',
+          schemaUidWeb:
+            '0x84fdf5748d9af166503472ff5deb0cd5f61f006169424805fd5554356ac6df10',
+        },
+      },
+      chainId: '0x4268', //17000
+      chainName: 'Holesky',
+      rpcUrls: ['https://rpc.holesky.ethpandaops.io/'],
+      blockExplorerUrls: ['https://holesky.etherscan.io/'],
+      
+      nativeCurrency: {
+        name: 'ETH',
+        symbol: 'ETH',
+        decimals: 18,
+      },
+      transactionDetailUrl: 'https://holesky.etherscan.io/tx',
+    },
     'Scroll Sepolia': {
       officialName: 'Scroll Sepolia',
       showName: 'Scroll',
@@ -436,6 +469,10 @@ export const ATTESTATIONTYPEIDLIST = [
   {
     text: "okx spot 30d trade vol",
     value: "17",
+  },
+  {
+    text: 'ChatGPT conversation proof',
+    value: '19'
   },
   {
     text: "On-chain transactions on BNB Chain since 2024 July",
