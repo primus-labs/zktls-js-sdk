@@ -6,7 +6,8 @@ export type AttestationErrorCode =
   "30001" | "30002" | "30003" | "30004" |
   "40001" | "40002" |
   "50002" | "50003" | "50004"  | "50005" | "50006" | "50007" | "50008"  | "50009"  | "50010" | "50011" |
-  "99999"
+  "99999" |
+  "-1200010"
 
 export type OnChainErrorCode =
   "00007" | "00008"
@@ -54,7 +55,8 @@ export const ErrorCodeMAP = {
   '50003':"Something went wrong. Please try again later.",
   '50004': "Something went wrong. Please try again later.",
   '50005':"Something went wrong. Please try again later.",
-  '50006':"Something went wrong. Please try again later.",
+  '50006': "Something went wrong. Please try again later.",
+  '-1200010':"Invalid Anwser!"
 }
 export class ZkAttestationError {
   code: ErrorCode;

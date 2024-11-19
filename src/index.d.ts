@@ -9,6 +9,7 @@ export type AttestationParams = {
   // signature?: string;
   // timestamp?: string;
   attestationParameters: any[];
+  algorithmType?: string;
 }
 export type ChainOption = {
   text: string;
