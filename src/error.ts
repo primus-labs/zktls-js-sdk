@@ -20,12 +20,13 @@ export const ErrorCodeMAP = {
   '00003':'A zkAttestation process is currently being generated. Please try again later.',
   '00004':'The user closes or cancels the attestation process.',
   '00005':'Wrong parameters!',
-  '00006':'No PADO extension version 0.3.15 or above was detected as installed.',
+  '00006':'No Primus extension version 0.3.15 or above was detected as installed.',
   '00007':'Insufficient wallet balance.',
   '00008':'Failed to submit the proof on-chain. Or other errors in the Wallet operations.',
-  '00009':'Your dApp is not registered. Please contact the PADO team.',
+  '00009':'Your dApp is not registered. Please contact the Primus team.',
   '00010':'Verification failed. Please try again later.',
-  '99999':'Undefined error. Contact the PADO team for further support',
+  '00011':'Launch failed: unstable connection.',
+  '99999':'Undefined error. Contact the Primus team for further support',
   '00102':'Attestation requirements not met. Insufficient assets balance in Binance Spot Account.',
   '00104': 'Attestation requirements not met.',
   '10001':'The internet condition is not stable enough to complete the zkAttestation flow. Please try again later.',
@@ -56,7 +57,7 @@ export const ErrorCodeMAP = {
   '50004': "Something went wrong. Please try again later.",
   '50005':"Something went wrong. Please try again later.",
   '50006': "Something went wrong. Please try again later.",
-  '-1200010':"Invalid Anwser!"
+  '-1200010':"Invalid message."
 }
 export class ZkAttestationError {
   code: ErrorCode;
