@@ -120,7 +120,6 @@ export default class ZkAttestationJSSDK {
       const vaildResult = this._verifyAttestationParams(attestationParams)
       console.log('333-sdk-startAttestation-vaildResult', vaildResult)
       this._initEnvProperties(attestationParams.chainID)
-      await this.initAttestation(this._dappSymbol)
       let formatParams: any = { ...attestationParams, attestationParameters: attestationParams.attestationParameters || [], dappSymbol: this._dappSymbol }
       
       if (['10', '12'].includes(formatParams.attestationTypeID) && formatParams.attestationParameters?.[0]) {
