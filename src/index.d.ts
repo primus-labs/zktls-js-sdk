@@ -1,3 +1,4 @@
+import AttRequest from './classes/AttRequest';
 export type AttestationParams = {
   chainID: number;
   walletAddress: string;
@@ -77,10 +78,32 @@ export type Eip712Msg = {
     "s": string
   }
 }
+
+export type AttNetworkRequest = {
+  url: string,
+  header: string, // json string
+  method: string,
+  body: string
+}
+export type AttNetworkResponseResolve = {
+  keyName: string,
+  parseType: string, //json or html
+  parsePath: string
+}
+export type Attestor = {
+  attestorAddr: string,
+  url: string
+}
 export type StartAttestationReturnParams = {
-  chainName: string;
-  attestationRequestId: string;
-  eip712MessageRawDataWithSignature: Eip712Msg
+  recipient: string,
+  request: AttNetworkRequest,
+  reponseResolve: AttNetworkResponseResolve[],
+  data: string, // json string
+  attConditions: string, // json string
+  timestamp: number,
+  additionParams: string,
+  attestors: Attestor[],
+  signatures: string[],
 }
 export type ErrorData = {
   code: string;
@@ -107,3 +130,37 @@ export type InitAttestationReturn = {
 }
 
 export type Env = 'development' | 'test' | 'production'
+
+export type AttModeAlgorithmType = 'mpctls' | 'proxytls'
+export type AttModeResultType = 'plain' | 'cipher'
+export type AttMode = {
+  algorithmType: AttModeAlgorithmType;
+  resultType: AttModeResultType;
+}
+export type BaseAttestationParams = {
+  appId: string;
+  attTemplateID: string;
+  userAddress: string;
+}
+export type FullAttestationParams = BaseAttestationParams & {
+  timestamp: number;
+  attMode?: AttMode;
+  attConditions?: object;
+  additionParams?: string;
+}
+export type AttRequestInstance = FullAttestationParams & {
+  setAdditionParams: (additionParams: string) => void;
+  setAttMode:(attMode: AttMode) => void;
+  setAttConditions:(attConditions: Object) => void;
+}
+
+export type SignedAttRequest = {
+  attRequest: FullAttestationParams,
+  appSignature: string
+}
+
+declare global {
+  interface Window {
+    primus?: any;
+  }
+}

@@ -37,3 +37,14 @@ export function isValidTimestampString(value:string) {
   
     return timestamp >= MIN_TIMESTAMP && timestamp <= MAX_TIMESTAMP;  
 }  
+
+export function getInstanceProperties(instance:any) {
+    const properties:any = {};
+    Object.keys(instance).forEach(key => {
+        // Only copy the attributes, not the methods
+        if (typeof instance[key] !== 'function') {
+            properties[key] = instance[key];
+        }
+    });
+    return properties;
+}
