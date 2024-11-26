@@ -1,10 +1,10 @@
 import { utils } from 'ethers';
 import { ATTESTATIONPOLLINGTIME, ATTESTATIONPOLLINGTIMEOUT, PADOADDRESSMAP, EASINFOMAP } from "./config/constants";
 import { getInstanceProperties } from './utils'
-import {ChainOption, StartAttestationReturnParams, Env, AttRequestInstance, SignedAttRequest } from './index.d'
+import { ChainOption, StartAttestationReturnParams, Env, AttRequestInstance, SignedAttRequest } from './index.d'
 import { ZkAttestationError } from './error'
 import AttRequest from './classes/AttRequest'
-
+const IS_APP = false
 export default class PrimusZKTLS {
   private _env: Env;
   private _padoAddress: string;
@@ -18,6 +18,7 @@ export default class PrimusZKTLS {
   padoExtensionVersion: string;
 
   appId: string;
+  appSecret?: string;
 
   constructor() {
     this.isInitialized = false
@@ -40,53 +41,62 @@ export default class PrimusZKTLS {
     this.appId = ''
   }
 
-  init(appId: string): Promise<string> {
-    this.isInstalled = !!window.primus
-    if (this.isInstalled) {
-      this.appId = appId
-      window.postMessage({
-        target: "padoExtension",
-        origin: "padoZKAttestationJSSDK",
-        name: "initAttestation",
-      });
-
+  init(appId: string, appSecret?: string): Promise<string | boolean> {
+    this.appId = appId
+    this.appSecret = appSecret
+    if (IS_APP) {
+      if (appSecret === undefined) {
+        throw new Error("In App environment, both appId and appSecret are required.");
+      }
+      return Promise.resolve(true)
     } else {
-      const errorCode = '00006'
-      return Promise.reject(new ZkAttestationError(
-        errorCode
-      ))
-    }
+      this.isInstalled = !!window.primus
+      if (this.isInstalled) {
+        window.postMessage({
+          target: "padoExtension",
+          origin: "padoZKAttestationJSSDK",
+          name: "initAttestation",
+        });
 
-    console.time('initAttestationCost')
-    return new Promise((resolve, reject) => {
-      const eventListener = (event: any) => {
-        const { target, name, params } = event.data;
-        if (target === "padoZKAttestationJSSDK") {
-          if (name === "initAttestationRes") {
-            console.log('sdk receive initAttestationRes', event.data)
-            const { result, errorData, data } = params
-            if (result) {
-              this.isInitialized = params?.result
+      } else {
+        const errorCode = '00006'
+        return Promise.reject(new ZkAttestationError(
+          errorCode
+        ))
+      }
 
-              if (data?.padoExtensionVersion) {
-                this.padoExtensionVersion = data.padoExtensionVersion
-              }
-              console.timeEnd('initAttestationCost')
-              window?.removeEventListener('message', eventListener);
-              resolve(this.padoExtensionVersion);
-            } else {
-              window?.removeEventListener('message', eventListener);
-              // console.log('sdk-initAttestationRes-errorData:',errorData)
-              if (errorData) {
-                const { code } = errorData
-                reject(new ZkAttestationError(code))
+      console.time('initAttestationCost')
+      return new Promise((resolve, reject) => {
+        const eventListener = (event: any) => {
+          const { target, name, params } = event.data;
+          if (target === "padoZKAttestationJSSDK") {
+            if (name === "initAttestationRes") {
+              console.log('sdk receive initAttestationRes', event.data)
+              const { result, errorData, data } = params
+              if (result) {
+                this.isInitialized = params?.result
+
+                if (data?.padoExtensionVersion) {
+                  this.padoExtensionVersion = data.padoExtensionVersion
+                }
+                console.timeEnd('initAttestationCost')
+                window?.removeEventListener('message', eventListener);
+                resolve(this.padoExtensionVersion);
+              } else {
+                window?.removeEventListener('message', eventListener);
+                // console.log('sdk-initAttestationRes-errorData:',errorData)
+                if (errorData) {
+                  const { code } = errorData
+                  reject(new ZkAttestationError(code))
+                }
               }
             }
           }
         }
-      }
-      window.addEventListener("message", eventListener);
-    });
+        window.addEventListener("message", eventListener);
+      });
+    }
+
   }
   generateRequestParams(attTemplateID: string, userAddress: string): AttRequestInstance {
     return new AttRequest({
@@ -95,14 +105,19 @@ export default class PrimusZKTLS {
       userAddress
     })
   }
-  sign(signParams: AttRequestInstance): Promise<SignedAttRequest> {
-    return new Promise((resolve, reject) => {
-      const fullAttestationParams = getInstanceProperties(signParams)
-      resolve({
-        attRequest: fullAttestationParams,
-        appSignature: ''
+  sign(signParams: AttRequestInstance | string): Promise<SignedAttRequest | string> {
+    if (IS_APP) {
+      return Promise.resolve("");
+    } else {
+      return new Promise((resolve, reject) => {
+        const fullAttestationParams = getInstanceProperties(signParams)
+        resolve({
+          attRequest: fullAttestationParams,
+          appSignature: ''
+        })
       })
-    })
+    }
+
   }
 
   async startAttestation(attestationParams: SignedAttRequest): Promise<StartAttestationReturnParams> {
@@ -196,7 +211,7 @@ export default class PrimusZKTLS {
                 //   reject(new ZkAttestationError(code, desc))
                 // } else {
                 reject(new ZkAttestationError(code))
-                
+
 
                 // if (params.reStartFlag) {
                 //   await this.initAttestation(this._dappSymbol)
