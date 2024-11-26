@@ -4,7 +4,7 @@ import { getInstanceProperties } from './utils'
 import { ChainOption, StartAttestationReturnParams, Env, AttRequestInstance, SignedAttRequest } from './index.d'
 import { ZkAttestationError } from './error'
 import AttRequest from './classes/AttRequest'
-const IS_APP = false
+
 export default class PrimusZKTLS {
   private _env: Env;
   private _padoAddress: string;
@@ -19,6 +19,7 @@ export default class PrimusZKTLS {
 
   appId: string;
   appSecret?: string;
+  isAppServer: boolean;
 
   constructor() {
     this.isInitialized = false
@@ -39,15 +40,15 @@ export default class PrimusZKTLS {
     this._getSupportedChainList()
 
     this.appId = ''
+    this.isAppServer = false
   }
 
   init(appId: string, appSecret?: string): Promise<string | boolean> {
     this.appId = appId
     this.appSecret = appSecret
-    if (IS_APP) {
-      if (appSecret === undefined) {
-        throw new Error("In App environment, both appId and appSecret are required.");
-      }
+    if (appSecret) {
+      this.isAppServer = true
+      this.isInitialized = true
       return Promise.resolve(true)
     } else {
       this.isInstalled = !!window.primus
@@ -105,19 +106,12 @@ export default class PrimusZKTLS {
       userAddress
     })
   }
-  sign(signParams: AttRequestInstance | string): Promise<SignedAttRequest | string> {
-    if (IS_APP) {
+  sign(signParams: string): Promise<string> {
+    if (this.isAppServer) {
       return Promise.resolve("");
     } else {
-      return new Promise((resolve, reject) => {
-        const fullAttestationParams = getInstanceProperties(signParams)
-        resolve({
-          attRequest: fullAttestationParams,
-          appSignature: ''
-        })
-      })
+      throw new Error("Only call in App server environment.");
     }
-
   }
 
   async startAttestation(attestationParams: SignedAttRequest): Promise<StartAttestationReturnParams> {
