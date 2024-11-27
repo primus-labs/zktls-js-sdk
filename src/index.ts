@@ -1,7 +1,6 @@
 import { utils } from 'ethers';
 import { ATTESTATIONPOLLINGTIME, ATTESTATIONPOLLINGTIMEOUT, PADOADDRESSMAP, EASINFOMAP } from "./config/constants";
-import { getInstanceProperties } from './utils'
-import { ChainOption, StartAttestationReturnParams, Env, AttRequestInstance, SignedAttRequest } from './index.d'
+import { ChainOption, Attestation, Env, SignedAttRequest } from './index.d'
 import { ZkAttestationError } from './error'
 import AttRequest from './classes/AttRequest'
 
@@ -99,7 +98,7 @@ export default class PrimusZKTLS {
     }
 
   }
-  generateRequestParams(attTemplateID: string, userAddress: string): AttRequestInstance {
+  generateRequestParams(attTemplateID: string, userAddress: string): AttRequest {
     return new AttRequest({
       appId: this.appId,
       attTemplateID,
@@ -114,7 +113,7 @@ export default class PrimusZKTLS {
     }
   }
 
-  async startAttestation(attestationParams: SignedAttRequest): Promise<StartAttestationReturnParams> {
+  async startAttestation(attestationParamsStr: string): Promise<Attestation> {
     if (!this.isInitialized) {
       const errorCode = '00001'
       return Promise.reject(new ZkAttestationError(errorCode))
@@ -126,6 +125,7 @@ export default class PrimusZKTLS {
     this._attestLoading = true
 
     try {
+      const attestationParams = JSON.parse(attestationParamsStr) as SignedAttRequest;
       this._verifyAttestationParams(attestationParams);
       // const vaildResult = this._verifyAttestationParams(attestationParams)
       // console.log('sdk-startAttestation-vaildResult', vaildResult)
@@ -225,14 +225,14 @@ export default class PrimusZKTLS {
   }
 
 
-  verifyAttestation(startAttestationReturnParams: StartAttestationReturnParams): boolean {
+  verifyAttestation(attestation: Attestation): boolean {
     if (this._verifyLoading) {
       alert("Verification in progress, please wait patiently")
       return false
     }
     this._verifyLoading = true
     console.time('verifyAttestationCost')
-    const { domain, message, signature, types } = startAttestationReturnParams.eip712MessageRawDataWithSignature
+    const { domain, message, signature, types } = attestation.eip712MessageRawDataWithSignature
     let formatDomain: any = { ...domain }
     delete formatDomain.salt;
     const result = utils.verifyTypedData(

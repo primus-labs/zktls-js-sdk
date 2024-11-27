@@ -1,4 +1,5 @@
 import type { AttMode, BaseAttestationParams } from '../index.d'
+import { getInstanceProperties } from '../utils'
 
 export default class AttRequest {
   appId: string;
@@ -28,6 +29,9 @@ export default class AttRequest {
   }
   setAttConditions(attConditions: Object) {
     this.attConditions = attConditions
+  }
+  toJsonString() {
+    return JSON.stringify(getInstanceProperties(this));
   }
 }
 

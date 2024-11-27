@@ -94,7 +94,7 @@ export type Attestor = {
   attestorAddr: string,
   url: string
 }
-export type StartAttestationReturnParams = {
+export type Attestation = {
   recipient: string,
   request: AttNetworkRequest,
   reponseResolve: AttNetworkResponseResolve[],
@@ -114,7 +114,7 @@ export type ErrorData = {
 
 export type StartAttestationReturn = {
   result: boolean;
-  data?: StartAttestationReturnParams;
+  data?: Attestation;
   errorData?: ErrorData,
   reStartFlag?: boolean;
 }
@@ -148,12 +148,6 @@ export type FullAttestationParams = BaseAttestationParams & {
   attConditions?: object;
   additionParams?: string;
 }
-export type AttRequestInstance = FullAttestationParams & {
-  setAdditionParams: (additionParams: string) => void;
-  setAttMode:(attMode: AttMode) => void;
-  setAttConditions:(attConditions: Object) => void;
-}
-
 export type SignedAttRequest = {
   attRequest: FullAttestationParams,
   appSignature: string
