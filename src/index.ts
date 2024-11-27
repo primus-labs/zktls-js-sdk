@@ -1,8 +1,9 @@
-import { utils } from 'ethers';
+import { ethers } from 'ethers';
 import { ATTESTATIONPOLLINGTIME, ATTESTATIONPOLLINGTIMEOUT, PADOADDRESSMAP, EASINFOMAP } from "./config/constants";
 import { ChainOption, Attestation, Env, SignedAttRequest } from './index.d'
 import { ZkAttestationError } from './error'
 import AttRequest from './classes/AttRequest'
+import { encodeAttestation } from "./utils";
 
 export default class PrimusZKTLS {
   private _env: Env;
@@ -200,7 +201,7 @@ export default class PrimusZKTLS {
                 clearTimeout(timeoutTimer)
                 console.timeEnd('startAttestCost')
                 window?.removeEventListener('message', eventListener);
-                const { code, desc } = errorData
+                const { code, /*desc*/ } = errorData
                 // if (attestationParams?.attestationTypeID === '101') {
                 //   reject(new ZkAttestationError(code, desc))
                 // } else {
@@ -232,15 +233,11 @@ export default class PrimusZKTLS {
     }
     this._verifyLoading = true
     console.time('verifyAttestationCost')
-    const { domain, message, signature, types } = attestation.eip712MessageRawDataWithSignature
-    let formatDomain: any = { ...domain }
-    delete formatDomain.salt;
-    const result = utils.verifyTypedData(
-      formatDomain,
-      types,
-      message,
-      signature
-    );
+    const encodeData = encodeAttestation(attestation);
+    const signature = attestation.signatures[0];
+    console.log('333-sdk-Verification encodeData:', encodeData);
+    console.log('333-sdk-Verification signature:', signature);
+    const result = ethers.utils.recoverAddress(encodeData, signature);
     console.log('333-sdk-Verification result:', result);
     console.timeEnd('verifyAttestationCost')
 

@@ -52,24 +52,24 @@ export function getInstanceProperties(instance:any) {
 }
 
 export function encodeAttestation(att: Attestation) {
-    const encodedData = ethers.utils.defaultAbiCoder.encode(
-        ["address", "bytes32", "bytes32", "string", "string", "unit64", "string"],
+    const encodedData = ethers.utils.solidityPack(
+        ["address", "bytes32", "bytes32", "string", "string", "uint64", "string"],
         [att.recipient, encodeRequest(att.request), encodeResponse(att.reponseResolve), 
         att.data, att.attConditions, att.timestamp, att.additionParams]
     );
     return ethers.utils.keccak256(encodedData);
 }
-function encodeRequest(request: AttNetworkRequest) {
-    const encodedData = ethers.utils.defaultAbiCoder.encode(
+export function encodeRequest(request: AttNetworkRequest) {
+    const encodedData = ethers.utils.solidityPack(
         ["string", "string", "string", "string"],
         [request.url, request.header, request.method, request.body]
     );
     return ethers.utils.keccak256(encodedData);
 }
-function encodeResponse(reponse: AttNetworkResponseResolve[]) {
-    let encodeData;
+export function encodeResponse(reponse: AttNetworkResponseResolve[]) {
+    let encodeData="0x";
     for (let i = 0; i < reponse.length; i++) {
-        encodeData = ethers.utils.defaultAbiCoder.encode(
+        encodeData = ethers.utils.solidityPack(
           ["bytes", "string", "string", "string"],
           [encodeData, reponse[i].keyName, reponse[i].parseType, reponse[i].parsePath]
         );
