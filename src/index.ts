@@ -111,7 +111,7 @@ export default class PrimusZKTLS {
       // @ts-ignore
       const wallet = new ethers.Wallet(this.appSecret);
       const messageHash = ethers.utils.keccak256(new TextEncoder().encode(signParams));
-      return  wallet.signMessage(ethers.utils.toUtf8Bytes(messageHash));
+      return  wallet.signMessage(messageHash);
     } else {
       throw new Error("Only call in App server environment.");
     }
