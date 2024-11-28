@@ -107,8 +107,7 @@ export default class PrimusZKTLS {
     })
   }
   sign(signParams: string): Promise<string> {
-    if (this.isAppServer) {
-      // @ts-ignore
+    if (this.isAppServer && this.appSecret) {
       const wallet = new ethers.Wallet(this.appSecret);
       const messageHash = ethers.utils.keccak256(new TextEncoder().encode(signParams));
       return  wallet.signMessage(messageHash);
