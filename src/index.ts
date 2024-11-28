@@ -107,8 +107,10 @@ export default class PrimusZKTLS {
     })
   }
   sign(signParams: string): Promise<string> {
-    if (this.isAppServer) {
-      return Promise.resolve("");
+    if (this.isAppServer && this.appSecret) {
+      const wallet = new ethers.Wallet(this.appSecret);
+      const messageHash = ethers.utils.keccak256(new TextEncoder().encode(signParams));
+      return  wallet.signMessage(messageHash);
     } else {
       throw new Error("Only call in App server environment.");
     }
