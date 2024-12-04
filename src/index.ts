@@ -4,7 +4,7 @@ import { ChainOption, Attestation, Env, SignedAttRequest } from './index.d'
 import { ZkAttestationError } from './error'
 import AttRequest from './classes/AttRequest'
 import { encodeAttestation } from "./utils";
-
+const packageJson = require('../package.json');
 export default class PrimusZKTLS {
   private _env: Env;
   private _padoAddress: string;
@@ -46,17 +46,20 @@ export default class PrimusZKTLS {
   init(appId: string, appSecret?: string): Promise<string | boolean> {
     this.appId = appId
     this.appSecret = appSecret
-    if (appSecret) {
+    // if (appSecret) { // TODO
       this.isAppServer = true
-      this.isInitialized = true
-      return Promise.resolve(true)
-    } else {
+    //   this.isInitialized = true
+    //   return Promise.resolve(true)
+    // } else {
       this.isInstalled = !!window.primus
       if (this.isInstalled) {
         window.postMessage({
           target: "padoExtension",
           origin: "padoZKAttestationJSSDK",
           name: "initAttestation",
+          params: {
+            sdkVersion: packageJson.version
+          }
         });
 
       } else {
@@ -96,7 +99,7 @@ export default class PrimusZKTLS {
         }
         window.addEventListener("message", eventListener);
       });
-    }
+    // }
 
   }
   generateRequestParams(attTemplateID: string, userAddress: string): AttRequest {
@@ -133,7 +136,7 @@ export default class PrimusZKTLS {
       // const vaildResult = this._verifyAttestationParams(attestationParams)
       // console.log('sdk-startAttestation-vaildResult', vaildResult)
       // this._initEnvProperties(attestationParams.chainID)// TODO???
-      let formatParams: any = { ...attestationParams }
+      let formatParams: any = { ...attestationParams,sdkVersion: packageJson.version }
 
       // if (formatParams['chainID']) {
       //   const chainMetaInfo = Object.values(this._easInfo).find((i: any) => formatParams['chainID'] === parseInt(i.chainId))
@@ -193,10 +196,7 @@ export default class PrimusZKTLS {
                 clearTimeout(timeoutTimer)
                 console.timeEnd('startAttestCost')
                 window?.removeEventListener('message', eventListener);
-                const formatParams2 = { ...data, chainName: formatParams.chainName }
-                // formatParams={chianName:'',
-                // attestationRequestId: activeRequestId,
-                // eip712MessageRawDataWithSignature,}
+                const formatParams2 = { ...data }
                 resolve(formatParams2)
               } else {
                 clearInterval(pollingTimer)

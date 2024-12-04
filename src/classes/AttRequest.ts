@@ -17,9 +17,9 @@ export default class AttRequest {
     this.userAddress = userAddress
     this.timestamp = + new Date()
     this.attMode = {
-      algorithmType: 'mpctls',
+      algorithmType: 'proxytls',
       resultType: 'plain'
-    }
+    } // TODO
   }
   setAdditionParams(additionParams: string) {
     this.additionParams = additionParams
