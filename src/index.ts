@@ -11,7 +11,6 @@ export default class PrimusZKTLS {
   private _easInfo: any;
   private _attestLoading: boolean;
 
-  private _verifyLoading: boolean;
   isInstalled?: boolean;
   isInitialized: boolean;
   supportedChainList: ChainOption[];
@@ -28,7 +27,6 @@ export default class PrimusZKTLS {
 
     this._easInfo = {}
     this._attestLoading = false
-    this._verifyLoading = false
     this._env = 'production'
     this._padoAddress = (PADOADDRESSMAP as any)[this._env]
     this.padoExtensionVersion = ''
@@ -46,11 +44,11 @@ export default class PrimusZKTLS {
   init(appId: string, appSecret?: string): Promise<string | boolean> {
     this.appId = appId
     this.appSecret = appSecret
-    // if (appSecret) { // TODO
+    if (appSecret) {
       this.isAppServer = true
-    //   this.isInitialized = true
-    //   return Promise.resolve(true)
-    // } else {
+      this.isInitialized = true
+      return Promise.resolve(true)
+    } else {
       this.isInstalled = !!window.primus
       if (this.isInstalled) {
         window.postMessage({
@@ -99,9 +97,9 @@ export default class PrimusZKTLS {
         }
         window.addEventListener("message", eventListener);
       });
-    // }
-
+    }
   }
+
   generateRequestParams(attTemplateID: string, userAddress: string): AttRequest {
     return new AttRequest({
       appId: this.appId,
@@ -109,11 +107,17 @@ export default class PrimusZKTLS {
       userAddress
     })
   }
-  sign(signParams: string): Promise<string> {
+
+  async sign(signParams: string): Promise<string> {
     if (this.isAppServer && this.appSecret) {
       const wallet = new ethers.Wallet(this.appSecret);
       const messageHash = ethers.utils.keccak256(new TextEncoder().encode(signParams));
-      return  wallet.signMessage(messageHash);
+      const sig = await wallet.signMessage(messageHash);
+      const result: SignedAttRequest = {
+        attRequest: JSON.parse(signParams),
+        appSignature: sig
+      };
+      return JSON.stringify(result);
     } else {
       throw new Error("Only call in App server environment.");
     }
@@ -227,22 +231,11 @@ export default class PrimusZKTLS {
     }
   }
 
-
   verifyAttestation(attestation: Attestation): boolean {
-    if (this._verifyLoading) {
-      alert("Verification in progress, please wait patiently")
-      return false
-    }
-    this._verifyLoading = true
-    console.time('verifyAttestationCost')
     const encodeData = encodeAttestation(attestation);
     const signature = attestation.signatures[0];
-    console.log('333-sdk-Verification encodeData:', encodeData);
-    console.log('333-sdk-Verification signature:', signature);
     const result = ethers.utils.recoverAddress(encodeData, signature);
-    console.log('333-sdk-Verification result:', result);
-    console.timeEnd('verifyAttestationCost')
-
+    console.log("sdk verifyAttestation recover address is ", result);
     const verifyResult = this._padoAddress.toLowerCase() === result.toLowerCase();
     return verifyResult
   }
