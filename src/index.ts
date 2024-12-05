@@ -1,31 +1,26 @@
 import { ethers } from 'ethers';
-import { ATTESTATIONPOLLINGTIME, ATTESTATIONPOLLINGTIMEOUT, PADOADDRESSMAP, EASINFOMAP } from "./config/constants";
-import { ChainOption, Attestation, Env, SignedAttRequest } from './index.d'
+import { ATTESTATIONPOLLINGTIME, ATTESTATIONPOLLINGTIMEOUT, PADOADDRESSMAP } from "./config/constants";
+import { Attestation, Env, SignedAttRequest } from './index.d'
 import { ZkAttestationError } from './error'
-import AttRequest from './classes/AttRequest'
+import { AttRequest } from './classes/AttRequest'
 import { encodeAttestation } from "./utils";
 const packageJson = require('../package.json');
-export default class PrimusZKTLS {
+class PrimusZKTLS {
   private _env: Env;
   private _padoAddress: string;
-  private _easInfo: any;
   private _attestLoading: boolean;
 
   isInstalled?: boolean;
   isInitialized: boolean;
-  supportedChainList: ChainOption[];
   padoExtensionVersion: string;
 
   appId: string;
   appSecret?: string;
-  isAppServer: boolean;
 
   constructor() {
     this.isInitialized = false
     this.isInstalled = false
-    this.supportedChainList = []
 
-    this._easInfo = {}
     this._attestLoading = false
     this._env = 'production'
     this._padoAddress = (PADOADDRESSMAP as any)[this._env]
@@ -35,17 +30,15 @@ export default class PrimusZKTLS {
     // } else {
     //   this._env = 'production'
     // }
-    this._getSupportedChainList()
 
     this.appId = ''
-    this.isAppServer = false
   }
 
   init(appId: string, appSecret?: string): Promise<string | boolean> {
     this.appId = appId
     this.appSecret = appSecret
-    if (appSecret) {
-      this.isAppServer = true
+    const isNodeEnv = typeof process !== 'undefined' && process.versions && process.versions.node;
+    if (appSecret && isNodeEnv) {
       this.isInitialized = true
       return Promise.resolve(true)
     } else {
@@ -109,7 +102,7 @@ export default class PrimusZKTLS {
   }
 
   async sign(signParams: string): Promise<string> {
-    if (this.isAppServer && this.appSecret) {
+    if (this.appSecret) {
       const wallet = new ethers.Wallet(this.appSecret);
       const messageHash = ethers.utils.keccak256(new TextEncoder().encode(signParams));
       const sig = await wallet.signMessage(messageHash);
@@ -137,16 +130,8 @@ export default class PrimusZKTLS {
     try {
       const attestationParams = JSON.parse(attestationParamsStr) as SignedAttRequest;
       this._verifyAttestationParams(attestationParams);
-      // const vaildResult = this._verifyAttestationParams(attestationParams)
-      // console.log('sdk-startAttestation-vaildResult', vaildResult)
-      // this._initEnvProperties(attestationParams.chainID)// TODO???
       let formatParams: any = { ...attestationParams,sdkVersion: packageJson.version }
 
-      // if (formatParams['chainID']) {
-      //   const chainMetaInfo = Object.values(this._easInfo).find((i: any) => formatParams['chainID'] === parseInt(i.chainId))
-      //   formatParams['chainName'] = (chainMetaInfo as any).title
-      // }
-      // console.log('sdk-startAttestation-params',formatParams )
       window.postMessage({
         target: "padoExtension",
         origin: "padoZKAttestationJSSDK",
@@ -261,35 +246,6 @@ export default class PrimusZKTLS {
     return true
   }
 
-  _getSupportedChainList() {
-    const allEnvEASINFOMAP = Object.values((EASINFOMAP as any)).reduce(
-      (prev: any, curr: any) => {
-        Object.assign(prev, curr)
-        return prev
-      }, {})
-    this.supportedChainList = Object.values(allEnvEASINFOMAP as any).map((i: any) =>
-    ({
-      text: i.officialName,
-      value: parseInt(i.chainId)
-    }));
-    console.log('333-sdk-supportedChainList:', this.supportedChainList)
-  }
-  _initEnvProperties(chainID: number) {
-    Object.keys((EASINFOMAP as any)).forEach((envKey: any) => {
-      const envEasInfoMap = (EASINFOMAP as any)[envKey]
-      const isCurEnv = Object.values(envEasInfoMap).find((info: any) => parseInt(info.chainId) === chainID)
-      if (isCurEnv) {
-        this._env = envKey
-      }
-    })
-    this._easInfo = (EASINFOMAP as any)[this._env]
-    this._padoAddress = (PADOADDRESSMAP as any)[this._env]
-    console.log('sdk-env:', this._env, this._easInfo)
-  }
-
 }
 
-
-
-
-
+export { PrimusZKTLS, AttRequest };

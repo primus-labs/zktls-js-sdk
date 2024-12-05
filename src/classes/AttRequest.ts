@@ -1,7 +1,7 @@
 import type { AttMode, BaseAttestationParams } from '../index.d'
 import { getInstanceProperties } from '../utils'
 
-export default class AttRequest {
+export class AttRequest {
   appId: string;
   attTemplateID: string;
   userAddress: string;
@@ -24,8 +24,11 @@ export default class AttRequest {
   setAdditionParams(additionParams: string) {
     this.additionParams = additionParams
   }
-  setAttMode(attMode: AttMode) {
-    this.attMode = attMode
+  setAttMode({algorithmType, resultType='plain'}: AttMode) {
+    this.attMode = {
+      algorithmType,
+      resultType
+    };
   }
   setAttConditions(attConditions: Object) {
     this.attConditions = attConditions
