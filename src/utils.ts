@@ -1,3 +1,5 @@
+import { Attestation, AttNetworkRequest, AttNetworkResponseResolve } from './index.d'
+const { ethers } = require("ethers");
 
 export function isValidNumericString(value: string) {  
     const regex = /^[0-9]*$/; 
@@ -37,3 +39,40 @@ export function isValidTimestampString(value:string) {
   
     return timestamp >= MIN_TIMESTAMP && timestamp <= MAX_TIMESTAMP;  
 }  
+
+export function getInstanceProperties(instance:any) {
+    const properties:any = {};
+    Object.keys(instance).forEach(key => {
+        // Only copy the attributes, not the methods
+        if (typeof instance[key] !== 'function') {
+            properties[key] = instance[key];
+        }
+    });
+    return properties;
+}
+
+export function encodeAttestation(att: Attestation) {
+    const encodedData = ethers.utils.solidityPack(
+        ["address", "bytes32", "bytes32", "string", "string", "uint64", "string"],
+        [att.recipient, encodeRequest(att.request), encodeResponse(att.reponseResolve), 
+        att.data, att.attConditions, att.timestamp, att.additionParams]
+    );
+    return ethers.utils.keccak256(encodedData);
+}
+export function encodeRequest(request: AttNetworkRequest) {
+    const encodedData = ethers.utils.solidityPack(
+        ["string", "string", "string", "string"],
+        [request.url, request.header, request.method, request.body]
+    );
+    return ethers.utils.keccak256(encodedData);
+}
+export function encodeResponse(reponse: AttNetworkResponseResolve[]) {
+    let encodeData="0x";
+    for (let i = 0; i < reponse.length; i++) {
+        encodeData = ethers.utils.solidityPack(
+          ["bytes", "string", "string", "string"],
+          [encodeData, reponse[i].keyName, reponse[i].parseType, reponse[i].parsePath]
+        );
+    }
+	return ethers.utils.keccak256(encodeData);
+}

@@ -1,11 +1,11 @@
 {
-  "name": "@padolabs/mpctls-js-sdk",
-  "version": "0.1.2",
-  "author": "PADO Labs <dev@padolabs.org>",
-  "description": "pado mpc-tls js sdk",
+  "name": "@primuslabs/zktls-js-sdk",
+  "version": "0.2.0",
+  "author": "Primus Labs <dev@primuslabs.org>",
+  "description": "Primus zkTLS js sdk",
   "repository": {
     "type": "git",
-    "url": "https://github.com/pado-labs/mpctls-js-sdk.git"
+    "url": "https://github.com/primus-labs/zktls-js-sdk.git"
   },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -49,7 +49,6 @@
     ]
   },
   "dependencies": {
-    "@ethereum-attestation-service/eas-sdk": "^2.6.0",
     "ethers": "^5.7.2"
   }
 }
