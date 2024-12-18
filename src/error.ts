@@ -50,7 +50,7 @@ export const ErrorCodeMAP = {
   '20003':"Something went wrong. Please try again later.",
   '20004': "Something went wrong. Please try again later.",
   '40001':"Something went wrong. Please try again later.",
-  '40002': "Something went wrong. Please try again later.",
+  '40002': "SSLCertificateError",
   '50001':"Something went wrong. Please try again later.",
   '50002': "Something went wrong. Please try again later.",
   '50003':"Something went wrong. Please try again later.",
