@@ -192,11 +192,11 @@ class PrimusZKTLS {
                 clearTimeout(timeoutTimer)
                 console.timeEnd('startAttestCost')
                 window?.removeEventListener('message', eventListener);
-                const { code, /*desc*/ } = errorData
+                const { code, data/*desc*/ } = errorData
                 // if (attestationParams?.attestationTypeID === '101') {
                 //   reject(new ZkAttestationError(code, desc))
                 // } else {
-                reject(new ZkAttestationError(code))
+                reject(new ZkAttestationError(code, '', data))
 
 
                 // if (params.reStartFlag) {
