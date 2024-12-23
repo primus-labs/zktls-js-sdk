@@ -67,9 +67,11 @@ export const ErrorCodeMAP = {
 export class ZkAttestationError {
   code: ErrorCode;
   message: string;
-  constructor(code: ErrorCode, message?: string) {
+  data?: any;
+  constructor(code: ErrorCode, message?: string, data?: any) {
     this.message = message || ErrorCodeMAP[code as keyof typeof ErrorCodeMAP];
     this.code = code;
+    this.data = data;
   }
 }
 
