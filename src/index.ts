@@ -8,7 +8,7 @@ const packageJson = require('../package.json');
 class PrimusZKTLS {
   private _env: Env;
   private _padoAddress: string;
-  private _attestLoading: boolean;
+  // private _attestLoading: boolean;
 
   isInstalled?: boolean;
   isInitialized: boolean;
@@ -21,7 +21,7 @@ class PrimusZKTLS {
     this.isInitialized = false
     this.isInstalled = false
 
-    this._attestLoading = false
+    // this._attestLoading = false
     this._env = 'production'
     this._padoAddress = (PADOADDRESSMAP as any)[this._env]
     this.padoExtensionVersion = ''
@@ -121,11 +121,11 @@ class PrimusZKTLS {
       const errorCode = '00001'
       return Promise.reject(new ZkAttestationError(errorCode))
     }
-    if (this._attestLoading) {
-      const errorCode = '00003'
-      return Promise.reject(new ZkAttestationError(errorCode))
-    }
-    this._attestLoading = true
+    // if (this._attestLoading) {
+    //   const errorCode = '00003'
+    //   return Promise.reject(new ZkAttestationError(errorCode))
+    // }
+    // this._attestLoading = true
 
     try {
       const attestationParams = JSON.parse(attestationParamsStr) as SignedAttRequest;
@@ -152,7 +152,7 @@ class PrimusZKTLS {
                 timeoutTimer = setTimeout(() => {
                   if (pollingTimer) {
                     clearInterval(pollingTimer)
-                    this._attestLoading = false
+                    // this._attestLoading = false
                     window.postMessage({
                       target: "padoExtension",
                       origin: "padoZKAttestationJSSDK",
@@ -170,7 +170,7 @@ class PrimusZKTLS {
                   });
                 }, ATTESTATIONPOLLINGTIME)
               } else {
-                this._attestLoading = false
+                // this._attestLoading = false
                 window?.removeEventListener('message', eventListener);
                 const { code,data } = errorData
                 reject(new ZkAttestationError(code, '', data))
@@ -179,7 +179,7 @@ class PrimusZKTLS {
             if (name === "startAttestationRes") {
               const { result, data, errorData } = params
               console.log('sdk-receive getAttestationResultRes', params)
-              this._attestLoading = false
+              // this._attestLoading = false
               if (result) {
                 clearInterval(pollingTimer)
                 clearTimeout(timeoutTimer)
@@ -211,7 +211,7 @@ class PrimusZKTLS {
       });
 
     } catch (e: any) {
-      this._attestLoading = false
+      // this._attestLoading = false
       return Promise.reject(e)
     }
   }
