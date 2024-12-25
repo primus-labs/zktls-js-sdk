@@ -15,7 +15,8 @@ export type OnChainErrorCode =
 export type ErrorCode = AttestationErrorCode | OnChainErrorCode;
 
 export const ErrorCodeMAP = {
-  '00001':'The zkTLS algorithm has not been initialized. Please restart the process.',
+  '00000':'Operation too frequent. Please try again later.',
+  '00001':'Algorithm startup exception.',
   '00002':'The verification process timed out.',
   '00003':'A verification process is in progress. Please try again later.',
   '00004':'The user closes or cancels the verification process.',

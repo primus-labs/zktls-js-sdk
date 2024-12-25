@@ -172,8 +172,8 @@ class PrimusZKTLS {
               } else {
                 this._attestLoading = false
                 window?.removeEventListener('message', eventListener);
-                const { code } = errorData
-                reject(new ZkAttestationError(code))
+                const { code,data } = errorData
+                reject(new ZkAttestationError(code, '', data))
               }
             }
             if (name === "startAttestationRes") {
