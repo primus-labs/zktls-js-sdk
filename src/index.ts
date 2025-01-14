@@ -240,9 +240,13 @@ class PrimusZKTLS {
     }
     checkFn('appId', appId, 'string')
     checkFn('attTemplateID', attTemplateID, 'string')
-    checkFn('userAddress', userAddress, 'string')
+    // checkFn('userAddress', userAddress, 'string')
     checkFn('timestamp', timestamp, 'number')
     checkFn('appSignature', appSignature, 'string')
+    const illgelAddr = ethers.utils.isAddress(userAddress)
+    if (!illgelAddr) {
+      throw new ZkAttestationError('00005', `Wrong userAddress!`)
+    }
     return true
   }
 
