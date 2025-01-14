@@ -73,7 +73,7 @@ export type BaseAttestationParams = {
 export type FullAttestationParams = BaseAttestationParams & {
   timestamp: number;
   attMode?: AttMode;
-  attConditions?: object;
+  attConditions?: AttConditions;
   additionParams?: string;
 }
 export type SignedAttRequest = {
@@ -86,3 +86,12 @@ declare global {
     primus?: any;
   }
 }
+export type ComparisonOp = '>' | '>=' | '=' | '!=' | '<' | '<=';
+export type OpType = ComparisonOp | 'SHA256' | 'REVEAL_STRING';
+export type AttSubCondition = {
+  feild: string,
+  op: OpType,
+  value?: string,
+}
+export type AttCondition = AttSubCondition[]
+export type AttConditions =  AttCondition[]

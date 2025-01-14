@@ -1,4 +1,4 @@
-import type { AttMode, BaseAttestationParams } from '../index.d'
+import type { AttMode, BaseAttestationParams,AttConditions } from '../index.d'
 import { getInstanceProperties } from '../utils'
 
 export class AttRequest {
@@ -7,7 +7,7 @@ export class AttRequest {
   userAddress: string;
   timestamp: number;
   attMode?: AttMode;
-  attConditions?: object;
+  attConditions?: AttConditions;
   additionParams?: string;
 
   constructor(baseAttestationParams: BaseAttestationParams) {
@@ -30,7 +30,7 @@ export class AttRequest {
       resultType
     };
   }
-  setAttConditions(attConditions: Object) {
+  setAttConditions(attConditions: AttConditions) {
     this.attConditions = attConditions
   }
   toJsonString() {
