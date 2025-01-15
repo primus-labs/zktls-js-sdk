@@ -93,11 +93,12 @@ class PrimusZKTLS {
     }
   }
 
-  generateRequestParams(attTemplateID: string, userAddress: string): AttRequest {
+  generateRequestParams(attTemplateID: string, userAddress?: string): AttRequest {
+    const userAddr = userAddress || "0x0000000000000000000000000000000000000000"
     return new AttRequest({
       appId: this.appId,
       attTemplateID,
-      userAddress
+      userAddress: userAddr
     })
   }
 
