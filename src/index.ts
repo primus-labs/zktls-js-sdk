@@ -93,11 +93,12 @@ class PrimusZKTLS {
     }
   }
 
-  generateRequestParams(attTemplateID: string, userAddress: string): AttRequest {
+  generateRequestParams(attTemplateID: string, userAddress?: string): AttRequest {
+    const userAddr = userAddress || "0x0000000000000000000000000000000000000000"
     return new AttRequest({
       appId: this.appId,
       attTemplateID,
-      userAddress
+      userAddress: userAddr
     })
   }
 
@@ -240,9 +241,13 @@ class PrimusZKTLS {
     }
     checkFn('appId', appId, 'string')
     checkFn('attTemplateID', attTemplateID, 'string')
-    checkFn('userAddress', userAddress, 'string')
+    // checkFn('userAddress', userAddress, 'string')
     checkFn('timestamp', timestamp, 'number')
     checkFn('appSignature', appSignature, 'string')
+    const illgelAddr = ethers.utils.isAddress(userAddress)
+    if (!illgelAddr) {
+      throw new ZkAttestationError('00005', `Wrong userAddress!`)
+    }
     return true
   }
 
