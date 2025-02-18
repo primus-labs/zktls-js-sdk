@@ -28,6 +28,7 @@ export const ErrorCodeMAP = {
   // '00010':'Verification failed. Please try again later.',
   // '00011':'Launch failed: unstable connection.',
   '00012':'Invalid Template ID.',
+  '00013':'Target data missing. Please check that the JSON path of the data in the response from the request URL matches your template.',
   // "00101":'Insufficient assets in your Trading Account. Please confirm and try again later.',
 
   // '00102':'Attestation requirements not met. Insufficient assets balance in Binance Spot Account.',
