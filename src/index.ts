@@ -1,6 +1,6 @@
 import { ethers } from 'ethers';
 import { ATTESTATIONPOLLINGTIME, ATTESTATIONPOLLINGTIMEOUT, PADOADDRESSMAP } from "./config/constants";
-import { Attestation, Env, SignedAttRequest } from './index.d'
+import { Attestation, Env, SignedAttRequest, InitOptions } from './index.d'
 import { ZkAttestationError } from './error'
 import { AttRequest } from './classes/AttRequest'
 import { encodeAttestation } from "./utils";
@@ -16,6 +16,7 @@ class PrimusZKTLS {
 
   appId: string;
   appSecret?: string;
+  options?: InitOptions;
 
   constructor() {
     this.isInitialized = false
@@ -32,14 +33,19 @@ class PrimusZKTLS {
     // }
 
     this.appId = ''
+    this.options = {platform: "pc"};
   }
 
-  init(appId: string, appSecret?: string): Promise<string | boolean> {
-    this.appId = appId
-    this.appSecret = appSecret
+  init(appId: string, appSecret?: string, options?: InitOptions): Promise<string | boolean> {
+    this.appId = appId;
+    this.appSecret = appSecret;
+    this.options = options;
     const isNodeEnv = typeof process !== 'undefined' && process.versions && process.versions.node;
-    if (appSecret && isNodeEnv) {
-      this.isInitialized = true
+    if (options?.platform === "android" || options?.platform === "ios") {
+      this.isInitialized = true;
+      return Promise.resolve(true)
+    } else if (appSecret && isNodeEnv) {
+      this.isInitialized = true;
       return Promise.resolve(true)
     } else {
       this.isInstalled = !!window.primus
@@ -216,6 +222,18 @@ class PrimusZKTLS {
       return Promise.reject(e)
     }
   }
+
+  startAttestationMobile(attestationParamsStr: string): string {
+    if (this.options?.platform === "android") {
+      const encodeParams = encodeURIComponent(attestationParamsStr);
+      const url = `primus://attestation?signedRequest=${encodeParams}`;
+      return url;
+    } else if (this.options?.platform === "ios") {
+
+    }
+    return "";
+  }
+
 
   verifyAttestation(attestation: Attestation): boolean {
     const encodeData = encodeAttestation(attestation);

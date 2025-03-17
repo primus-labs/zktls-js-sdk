@@ -95,3 +95,7 @@ export type AttSubCondition = {
 }
 export type AttCondition = AttSubCondition[]
 export type AttConditions =  AttCondition[]
+
+export type InitOptions = {
+  platform?: string
+}
