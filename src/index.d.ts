@@ -75,6 +75,7 @@ export type FullAttestationParams = BaseAttestationParams & {
   attMode?: AttMode;
   attConditions?: AttConditions;
   additionParams?: string;
+  requestid?: string;
 }
 export type SignedAttRequest = {
   attRequest: FullAttestationParams,

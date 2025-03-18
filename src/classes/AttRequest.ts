@@ -1,5 +1,6 @@
 import type { AttMode, BaseAttestationParams,AttConditions } from '../index.d'
 import { getInstanceProperties } from '../utils'
+import { v4 as uuidv4 } from 'uuid';
 
 export class AttRequest {
   appId: string;
@@ -9,6 +10,7 @@ export class AttRequest {
   attMode?: AttMode;
   attConditions?: AttConditions;
   additionParams?: string;
+  requestid?: string;
 
   constructor(baseAttestationParams: BaseAttestationParams) {
     const { appId, attTemplateID, userAddress } = baseAttestationParams
@@ -20,6 +22,7 @@ export class AttRequest {
       algorithmType: 'proxytls',
       resultType: 'plain'
     } // TODO
+    this.requestid = uuidv4();
   }
   setAdditionParams(additionParams: string) {
     this.additionParams = additionParams

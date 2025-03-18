@@ -3,7 +3,7 @@ import { ATTESTATIONPOLLINGTIME, ATTESTATIONPOLLINGTIMEOUT, PADOADDRESSMAP } fro
 import { Attestation, Env, SignedAttRequest, InitOptions } from './index.d'
 import { ZkAttestationError } from './error'
 import { AttRequest } from './classes/AttRequest'
-import { encodeAttestation } from "./utils";
+import { encodeAttestation, sendRequest } from "./utils";
 const packageJson = require('../package.json');
 class PrimusZKTLS {
   private _env: Env;
@@ -137,6 +137,11 @@ class PrimusZKTLS {
     try {
       const attestationParams = JSON.parse(attestationParamsStr) as SignedAttRequest;
       this._verifyAttestationParams(attestationParams);
+
+      if (this.options?.platform === "android" || this.options?.platform === "ios") {
+        return this.startAttestationMobile(attestationParamsStr);
+      }
+
       let formatParams: any = { ...attestationParams,sdkVersion: packageJson.version }
 
       window.postMessage({
@@ -223,7 +228,42 @@ class PrimusZKTLS {
     }
   }
 
-  startAttestationMobile(attestationParamsStr: string): string {
+  async startAttestationMobile(attestationParamsStr: string): Promise<Attestation> {
+    const url = this.GetAttestationMobileUrl(attestationParamsStr);
+    window.open(url, "_self");
+    const attestationParams = JSON.parse(attestationParamsStr) as SignedAttRequest;
+    const requestid = attestationParams.attRequest.requestid;
+    const recipient = attestationParams.attRequest.userAddress;
+    const queryurl = `https://api-dev.padolabs.org/attestation/result?requestId=${requestid}&recipient=${recipient}`;
+    return new Promise((resolve, reject) => {
+      const timer = setInterval(async () => {
+        try {
+            const response = await sendRequest(queryurl);
+            console.log("query response=", response);
+            if (response.rc === 0) {
+                clearInterval(timer);
+                clearTimeout(timeoutTimer);
+                resolve(response.result);
+            } else if (response.rc === 1 && response.mc != "-1001004") {
+                console.log("reject error code");
+                clearInterval(timer);
+                clearTimeout(timeoutTimer);
+                reject(new ZkAttestationError(response.mc, '', response.msg));
+            }
+        } catch (error) {
+          console.log("query moblile result error.");
+        }
+      }, ATTESTATIONPOLLINGTIME);
+
+      const timeoutTimer = setTimeout(() => {
+          console.log("reject timeout");
+          clearInterval(timer);
+          reject(new ZkAttestationError('01000', '', ''));
+      }, ATTESTATIONPOLLINGTIMEOUT);
+    });
+  }
+
+  GetAttestationMobileUrl(attestationParamsStr: string): string {
     if (this.options?.platform === "android") {
       const encodeParams = encodeURIComponent(attestationParamsStr);
       const url = `primus://attestation?signedRequest=${encodeParams}`;
@@ -233,7 +273,6 @@ class PrimusZKTLS {
     }
     return "";
   }
-
 
   verifyAttestation(attestation: Attestation): boolean {
     const encodeData = encodeAttestation(attestation);
