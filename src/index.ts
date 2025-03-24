@@ -240,10 +240,10 @@ class PrimusZKTLS {
         try {
             const response = await sendRequest(queryurl);
             console.log("query response=", response);
-            if (response.rc === 0 && response.result.signatures) {
+            if (response.rc === 0 && response.result.status === "SUCCESS") {
                 clearInterval(timer);
                 clearTimeout(timeoutTimer);
-                resolve(response.result);
+                resolve(response.result.result);
             } else if (response.rc === 0 && response.result.status === "FAILED") {
                 const errorCode = response.result.result.errorCode;
                 const errorMsg = response.result.result.errorMessage;
