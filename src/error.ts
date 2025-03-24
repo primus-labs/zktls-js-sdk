@@ -37,7 +37,7 @@ export const ErrorCodeMAP = {
   //  "00103": 'This account may have already been bound to a wallet address, or your wallet address may already have a zkAttestation with another Binance account.',
   '00104': 'Not met the verification requirements.',
 
-  '01000': 'query mobile attestation timeout.',
+  '01000': 'Attestation timeout.',
 
   '10001':'Unstable internet connection. Please try again.',
   '10002':'Unstable internet connection. Please try again.',

@@ -240,18 +240,20 @@ class PrimusZKTLS {
         try {
             const response = await sendRequest(queryurl);
             console.log("query response=", response);
-            if (response.rc === 0) {
+            if (response.rc === 0 && response.result.signatures) {
                 clearInterval(timer);
                 clearTimeout(timeoutTimer);
                 resolve(response.result);
-            } else if (response.rc === 1 && response.mc != "-1001004") {
-                console.log("reject error code");
+            } else if (response.rc === 0 && response.result.status === "FAILED") {
+                const errorCode = response.result.result.errorCode;
+                const errorMsg = response.result.result.errorMessage;
+                console.log(`reject error code=${errorCode}, errorMsg=${errorMsg}`);
                 clearInterval(timer);
                 clearTimeout(timeoutTimer);
-                reject(new ZkAttestationError(response.mc, '', response.msg));
+                reject(new ZkAttestationError(errorCode, '', errorMsg));
             }
         } catch (error) {
-          console.log("query moblile result error.");
+          console.log("query moblie attestaion result error.");
         }
       }, ATTESTATIONPOLLINGTIME);
 
@@ -264,12 +266,10 @@ class PrimusZKTLS {
   }
 
   GetAttestationMobileUrl(attestationParamsStr: string): string {
-    if (this.options?.platform === "android") {
+    if (this.options?.platform === "android" || this.options?.platform === "ios") {
       const encodeParams = encodeURIComponent(attestationParamsStr);
       const url = `primus://attestation?signedRequest=${encodeParams}`;
       return url;
-    } else if (this.options?.platform === "ios") {
-
     }
     return "";
   }
