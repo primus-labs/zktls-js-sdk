@@ -234,12 +234,13 @@ class PrimusZKTLS {
     const attestationParams = JSON.parse(attestationParamsStr) as SignedAttRequest;
     const requestid = attestationParams.attRequest.requestid;
     const recipient = attestationParams.attRequest.userAddress;
-    const queryurl = `https://api-dev.padolabs.org/attestation/result?requestId=${requestid}&recipient=${recipient}`;
+    const queryurl = `https://api.padolabs.org/attestation/result?requestId=${requestid}&recipient=${recipient}`;
     return new Promise((resolve, reject) => {
       const timer = setInterval(async () => {
         try {
             const response = await sendRequest(queryurl);
             console.log("query response=", response);
+            console.log("query response.result.status=", response.result.status);
             if (response.rc === 0 && response.result.status === "SUCCESS") {
                 clearInterval(timer);
                 clearTimeout(timeoutTimer);

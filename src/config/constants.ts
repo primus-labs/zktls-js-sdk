@@ -3,7 +3,7 @@ export const PADOEXTENSIONID = "oeiomhmbaapihbilkfkhmlajkeegnjhe";
 export const ONESECOND = 1000;
 export const ONEMINUTE = 60 * ONESECOND;
 export const ATTESTATIONPOLLINGTIME = 1 * ONESECOND;
-export const ATTESTATIONPOLLINGTIMEOUT = 1 * ONEMINUTE;
+export const ATTESTATIONPOLLINGTIMEOUT = 2 * ONEMINUTE;
 
 export const PADOADDRESSMAP = {
   development: '0xe02bd7a6c8aa401189aebb5bad755c2610940a73',
