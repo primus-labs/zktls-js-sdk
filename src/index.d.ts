@@ -100,5 +100,5 @@ export type AttConditions =  AttCondition[]
 
 export type InitOptions = {
   platform?: string,
-  env?: string,
+  env?: Env,
 }

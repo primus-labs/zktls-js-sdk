@@ -1,6 +1,6 @@
 import { ethers } from 'ethers';
 import { ATTESTATIONPOLLINGTIME, ATTESTATIONPOLLINGTIMEOUT, PADOADDRESSMAP } from "./config/constants";
-import { Attestation, Env, SignedAttRequest, InitOptions } from './index.d'
+import { Attestation, SignedAttRequest, InitOptions } from './index.d'
 import { ZkAttestationError } from './error'
 import { AttRequest } from './classes/AttRequest'
 import { encodeAttestation, sendRequest } from "./utils";
