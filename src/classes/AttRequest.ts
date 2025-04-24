@@ -11,6 +11,7 @@ export class AttRequest {
   attConditions?: AttConditions;
   additionParams?: string;
   requestid?: string;
+  backUrl?: string;
 
   constructor(baseAttestationParams: BaseAttestationParams) {
     const { appId, attTemplateID, userAddress } = baseAttestationParams
@@ -23,6 +24,7 @@ export class AttRequest {
       resultType: 'plain'
     } // TODO
     this.requestid = uuidv4();
+    this.backUrl = window.location.href;
   }
   setAdditionParams(additionParams: string) {
     this.additionParams = additionParams
@@ -35,6 +37,9 @@ export class AttRequest {
   }
   setAttConditions(attConditions: AttConditions) {
     this.attConditions = attConditions
+  }
+  setBackUrl(url: string) {
+    this.backUrl = url;
   }
   toJsonString() {
     return JSON.stringify(getInstanceProperties(this));

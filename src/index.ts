@@ -6,7 +6,6 @@ import { AttRequest } from './classes/AttRequest'
 import { encodeAttestation, sendRequest } from "./utils";
 const packageJson = require('../package.json');
 class PrimusZKTLS {
-  private _env: Env;
   private _padoAddress: string;
   // private _attestLoading: boolean;
 
@@ -22,24 +21,20 @@ class PrimusZKTLS {
     this.isInitialized = false
     this.isInstalled = false
 
-    // this._attestLoading = false
-    this._env = 'production'
-    this._padoAddress = (PADOADDRESSMAP as any)[this._env]
     this.padoExtensionVersion = ''
-    // if (env && ['development', 'test'].includes(env)) {
-    //   this._env = 'development'
-    // } else {
-    //   this._env = 'production'
-    // }
 
     this.appId = ''
-    this.options = {platform: "pc"};
+    this.options = {platform: "pc", env: "production"};
+    this._padoAddress = (PADOADDRESSMAP as any)["production"]
   }
 
   init(appId: string, appSecret?: string, options?: InitOptions): Promise<string | boolean> {
     this.appId = appId;
     this.appSecret = appSecret;
     this.options = options;
+    if (options?.env !== "production") {
+      this._padoAddress = (PADOADDRESSMAP as any)["development"];
+    }
     const isNodeEnv = typeof process !== 'undefined' && process.versions && process.versions.node;
     if (options?.platform === "android" || options?.platform === "ios") {
       this.isInitialized = true;
@@ -101,6 +96,7 @@ class PrimusZKTLS {
 
   generateRequestParams(attTemplateID: string, userAddress?: string): AttRequest {
     const userAddr = userAddress || "0x0000000000000000000000000000000000000000"
+
     return new AttRequest({
       appId: this.appId,
       attTemplateID,
@@ -234,7 +230,10 @@ class PrimusZKTLS {
     const attestationParams = JSON.parse(attestationParamsStr) as SignedAttRequest;
     const requestid = attestationParams.attRequest.requestid;
     const recipient = attestationParams.attRequest.userAddress;
-    const queryurl = `https://api.padolabs.org/attestation/result?requestId=${requestid}&recipient=${recipient}`;
+    let queryurl = `https://api.padolabs.org/attestation/result?requestId=${requestid}&recipient=${recipient}`;
+    if (this.options?.env !== "production") {
+      queryurl = `https://api-dev.padolabs.org/attestation/result?requestId=${requestid}&recipient=${recipient}`;
+    }
     return new Promise((resolve, reject) => {
       const timer = setInterval(async () => {
         try {
