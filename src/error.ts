@@ -1,6 +1,7 @@
 export type AttestationErrorCode =
   "00001" | "00002" | '00003' | "00004" | '00005' | '00006' | "00009" | "00010" |
   "00101" | "00102" | "00103" | "00104" |
+  "01000" |
   "10001" | "10002" | "10003" | "10004" |
   "20001" | "20002" | "20003" | "20004" | "20005" |
   "30001" | "30002" | "30003" | "30004" |
@@ -35,6 +36,8 @@ export const ErrorCodeMAP = {
   // '00102':'Attestation requirements not met. Insufficient assets balance in Binance Spot Account.',
   //  "00103": 'This account may have already been bound to a wallet address, or your wallet address may already have a zkAttestation with another Binance account.',
   '00104': 'Not met the verification requirements.',
+
+  '01000': 'Attestation timeout.',
 
   '10001':'Unstable internet connection. Please try again.',
   '10002':'Unstable internet connection. Please try again.',

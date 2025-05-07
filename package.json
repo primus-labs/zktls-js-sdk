@@ -1,6 +1,6 @@
 {
   "name": "@primuslabs/zktls-js-sdk",
-  "version": "0.2.11",
+  "version": "0.3.0",
   "author": "Primus Labs <dev@primuslabs.org>",
   "description": "Primus zkTLS js sdk",
   "repository": {
@@ -49,6 +49,7 @@
     ]
   },
   "dependencies": {
-    "ethers": "^5.7.2"
+    "ethers": "^5.7.2",
+    "uuid": "^11.0.4"
   }
 }

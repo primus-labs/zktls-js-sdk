@@ -1,12 +1,11 @@
 import { ethers } from 'ethers';
-import { ATTESTATIONPOLLINGTIME, ATTESTATIONPOLLINGTIMEOUT, PADOADDRESSMAP } from "./config/constants";
-import { Attestation, Env, SignedAttRequest } from './index.d'
+import { ATTESTATIONPOLLINGTIME, ATTESTATIONPOLLINGTIMEOUT, PADOADDRESSMAP, ATTESTATIONPOLLINGTIMEOUTMOBILE } from "./config/constants";
+import { Attestation, SignedAttRequest, InitOptions } from './index.d'
 import { ZkAttestationError } from './error'
 import { AttRequest } from './classes/AttRequest'
-import { encodeAttestation } from "./utils";
+import { encodeAttestation, sendRequest } from "./utils";
 const packageJson = require('../package.json');
 class PrimusZKTLS {
-  private _env: Env;
   private _padoAddress: string;
   // private _attestLoading: boolean;
 
@@ -16,30 +15,37 @@ class PrimusZKTLS {
 
   appId: string;
   appSecret?: string;
+  options: InitOptions;
 
   constructor() {
     this.isInitialized = false
     this.isInstalled = false
 
-    // this._attestLoading = false
-    this._env = 'production'
-    this._padoAddress = (PADOADDRESSMAP as any)[this._env]
     this.padoExtensionVersion = ''
-    // if (env && ['development', 'test'].includes(env)) {
-    //   this._env = 'development'
-    // } else {
-    //   this._env = 'production'
-    // }
 
     this.appId = ''
+    this.options = {platform: "pc", env: "production"};
+    this._padoAddress = (PADOADDRESSMAP as any)["production"]
   }
 
-  init(appId: string, appSecret?: string): Promise<string | boolean> {
-    this.appId = appId
-    this.appSecret = appSecret
+  init(appId: string, appSecret?: string, options?: InitOptions): Promise<string | boolean> {
+    this.appId = appId;
+    this.appSecret = appSecret;
+    if (options?.platform) {
+      this.options.platform = options.platform;
+    }
+    if (options?.env) {
+      this.options.env = options?.env;
+    }
+    if (options?.env !== "production") {
+      this._padoAddress = (PADOADDRESSMAP as any)["development"];
+    }
     const isNodeEnv = typeof process !== 'undefined' && process.versions && process.versions.node;
-    if (appSecret && isNodeEnv) {
-      this.isInitialized = true
+    if (options?.platform === "android" || options?.platform === "ios") {
+      this.isInitialized = true;
+      return Promise.resolve(true)
+    } else if (appSecret && isNodeEnv) {
+      this.isInitialized = true;
       return Promise.resolve(true)
     } else {
       this.isInstalled = !!window.primus
@@ -95,6 +101,7 @@ class PrimusZKTLS {
 
   generateRequestParams(attTemplateID: string, userAddress?: string): AttRequest {
     const userAddr = userAddress || "0x0000000000000000000000000000000000000000"
+
     return new AttRequest({
       appId: this.appId,
       attTemplateID,
@@ -131,6 +138,11 @@ class PrimusZKTLS {
     try {
       const attestationParams = JSON.parse(attestationParamsStr) as SignedAttRequest;
       this._verifyAttestationParams(attestationParams);
+
+      if (this.options?.platform === "android" || this.options?.platform === "ios") {
+        return this.startAttestationMobile(attestationParamsStr);
+      }
+
       let formatParams: any = { ...attestationParams,sdkVersion: packageJson.version }
 
       window.postMessage({
@@ -216,6 +228,56 @@ class PrimusZKTLS {
       // this._attestLoading = false
       return Promise.reject(e)
     }
+  }
+
+  async startAttestationMobile(attestationParamsStr: string): Promise<Attestation> {
+    const url = this.GetAttestationMobileUrl(attestationParamsStr);
+    window.open(url, "_self");
+    const attestationParams = JSON.parse(attestationParamsStr) as SignedAttRequest;
+    const requestid = attestationParams.attRequest.requestid;
+    const recipient = attestationParams.attRequest.userAddress;
+    let queryurl = `https://api.padolabs.org/attestation/result?requestId=${requestid}&recipient=${recipient}`;
+    if (this.options?.env !== "production") {
+      queryurl = `https://api-dev.padolabs.org/attestation/result?requestId=${requestid}&recipient=${recipient}`;
+    }
+    return new Promise((resolve, reject) => {
+      const timer = setInterval(async () => {
+        try {
+            const response = await sendRequest(queryurl);
+            console.log("query response=", response);
+            console.log("query response.result.status=", response.result.status);
+            if (response.rc === 0 && response.result.status === "SUCCESS") {
+                clearInterval(timer);
+                clearTimeout(timeoutTimer);
+                resolve(response.result.result);
+            } else if (response.rc === 0 && response.result.status === "FAILED") {
+                const errorCode = response.result.result.errorCode;
+                const errorMsg = response.result.result.errorMessage;
+                console.log(`reject error code=${errorCode}, errorMsg=${errorMsg}`);
+                clearInterval(timer);
+                clearTimeout(timeoutTimer);
+                reject(new ZkAttestationError(errorCode, '', errorMsg));
+            }
+        } catch (error) {
+          console.log("query moblie attestaion result error.");
+        }
+      }, ATTESTATIONPOLLINGTIME);
+
+      const timeoutTimer = setTimeout(() => {
+          console.log("reject timeout");
+          clearInterval(timer);
+          reject(new ZkAttestationError('01000', '', ''));
+      }, ATTESTATIONPOLLINGTIMEOUTMOBILE);
+    });
+  }
+
+  GetAttestationMobileUrl(attestationParamsStr: string): string {
+    const encodeParams = encodeURIComponent(attestationParamsStr);
+    if (this.options?.platform === "android" || this.options?.platform === "ios") {
+      const url = `https://primuslabs.xyz/attestation-processor?signedRequest=${encodeParams}`;
+      return url;
+    }
+    return "";
   }
 
   verifyAttestation(attestation: Attestation): boolean {

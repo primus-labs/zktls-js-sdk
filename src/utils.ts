@@ -76,3 +76,16 @@ export function encodeResponse(reponse: AttNetworkResponseResolve[]) {
     }
 	return ethers.utils.keccak256(encodeData);
 }
+
+export async function sendRequest(url: string, options?: RequestInit): Promise<any> {
+    try {
+      const response = await fetch(url, options);
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+      return await response.json();
+    } catch (error) {
+      console.error('Request failed:', error);
+      throw error;
+    }
+}
