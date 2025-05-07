@@ -172,6 +172,7 @@ class PrimusZKTLS {
                       name: "getAttestationResultTimeout",
                       params: {}
                     });
+                    reject(new ZkAttestationError('00002', '', 'The SDK reported a timeout.'))
                   }
                 }, ATTESTATIONPOLLINGTIMEOUT)
                 pollingTimer = setInterval(() => {
