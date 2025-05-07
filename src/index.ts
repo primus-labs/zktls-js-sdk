@@ -1,5 +1,5 @@
 import { ethers } from 'ethers';
-import { ATTESTATIONPOLLINGTIME, ATTESTATIONPOLLINGTIMEOUT, PADOADDRESSMAP } from "./config/constants";
+import { ATTESTATIONPOLLINGTIME, ATTESTATIONPOLLINGTIMEOUT, PADOADDRESSMAP, ATTESTATIONPOLLINGTIMEOUTMOBILE } from "./config/constants";
 import { Attestation, SignedAttRequest, InitOptions } from './index.d'
 import { ZkAttestationError } from './error'
 import { AttRequest } from './classes/AttRequest'
@@ -15,7 +15,7 @@ class PrimusZKTLS {
 
   appId: string;
   appSecret?: string;
-  options?: InitOptions;
+  options: InitOptions;
 
   constructor() {
     this.isInitialized = false
@@ -31,7 +31,12 @@ class PrimusZKTLS {
   init(appId: string, appSecret?: string, options?: InitOptions): Promise<string | boolean> {
     this.appId = appId;
     this.appSecret = appSecret;
-    this.options = options;
+    if (options?.platform) {
+      this.options.platform = options.platform;
+    }
+    if (options?.env) {
+      this.options.env = options?.env;
+    }
     if (options?.env !== "production") {
       this._padoAddress = (PADOADDRESSMAP as any)["development"];
     }
@@ -261,17 +266,14 @@ class PrimusZKTLS {
           console.log("reject timeout");
           clearInterval(timer);
           reject(new ZkAttestationError('01000', '', ''));
-      }, ATTESTATIONPOLLINGTIMEOUT);
+      }, ATTESTATIONPOLLINGTIMEOUTMOBILE);
     });
   }
 
   GetAttestationMobileUrl(attestationParamsStr: string): string {
     const encodeParams = encodeURIComponent(attestationParamsStr);
-    if (this.options?.platform === "android") {
+    if (this.options?.platform === "android" || this.options?.platform === "ios") {
       const url = `https://primuslabs.xyz/attestation-processor?signedRequest=${encodeParams}`;
-      return url;
-    } else if (this.options?.platform === "ios") {
-      const url = `primus://attestation?signedRequest=${encodeParams}`;
       return url;
     }
     return "";

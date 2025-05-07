@@ -24,7 +24,7 @@ export class AttRequest {
       resultType: 'plain'
     } // TODO
     this.requestid = uuidv4();
-    this.backUrl = window.location.href;
+    this.backUrl = "";
   }
   setAdditionParams(additionParams: string) {
     this.additionParams = additionParams
