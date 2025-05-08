@@ -37,7 +37,7 @@ class PrimusZKTLS {
     if (options?.env) {
       this.options.env = options?.env;
     }
-    if (options?.env !== "production") {
+    if (this.options?.env !== "production") {
       this._padoAddress = (PADOADDRESSMAP as any)["development"];
     }
     const isNodeEnv = typeof process !== 'undefined' && process.versions && process.versions.node;
