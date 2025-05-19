@@ -273,8 +273,11 @@ class PrimusZKTLS {
 
   GetAttestationMobileUrl(attestationParamsStr: string): string {
     const encodeParams = encodeURIComponent(attestationParamsStr);
-    if (this.options?.platform === "android" || this.options?.platform === "ios") {
+    if (this.options?.platform === "android") {
       const url = `https://primuslabs.xyz/attestation-processor?signedRequest=${encodeParams}`;
+      return url;
+    } else if (this.options?.platform === "ios") {
+      const url = `https://appclip.apple.com/id?p=PrimusLabs.Primus.AppClip&signedRequest=${encodeParams}`;
       return url;
     }
     return "";
