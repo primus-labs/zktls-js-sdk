@@ -102,3 +102,5 @@ export type InitOptions = {
   platform?: string,
   env?: Env,
 }
+
+export type ComputeMode = 'nonecomplete' | 'nonepartial' | 'normal';

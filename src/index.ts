@@ -232,7 +232,8 @@ class PrimusZKTLS {
 
   async startAttestationMobile(attestationParamsStr: string): Promise<Attestation> {
     const url = this.GetAttestationMobileUrl(attestationParamsStr);
-    window.open(url, "_self");
+    const newWin = window.open(url, "_self");
+    console.log("startAttestationMobile newWin=", newWin);
     const attestationParams = JSON.parse(attestationParamsStr) as SignedAttRequest;
     const requestid = attestationParams.attRequest.requestid;
     const recipient = attestationParams.attRequest.userAddress;
