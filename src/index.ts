@@ -16,6 +16,7 @@ class PrimusZKTLS {
   appId: string;
   appSecret?: string;
   options: InitOptions;
+  extendedData: Record<string, any>;
 
   constructor() {
     this.isInitialized = false
@@ -26,6 +27,7 @@ class PrimusZKTLS {
     this.appId = ''
     this.options = {platform: "pc", env: "production"};
     this._padoAddress = (PADOADDRESSMAP as any)["production"]
+    this.extendedData = {};
   }
 
   init(appId: string, appSecret?: string, options?: InitOptions): Promise<string | boolean> {
@@ -199,7 +201,9 @@ class PrimusZKTLS {
                 clearTimeout(timeoutTimer)
                 console.timeEnd('startAttestCost')
                 window?.removeEventListener('message', eventListener);
-                const formatParams2 = { ...data }
+                const {extendedData, ...formatParams2} = data;
+                let requestid = attestationParams.attRequest.requestid ? attestationParams.attRequest.requestid : '';
+                this.extendedData[requestid] = extendedData;
                 resolve(formatParams2)
               } else {
                 clearInterval(pollingTimer)
@@ -291,6 +295,10 @@ class PrimusZKTLS {
     console.log("sdk verifyAttestation recover address is ", result);
     const verifyResult = this._padoAddress.toLowerCase() === result.toLowerCase();
     return verifyResult
+  }
+
+  getExtendedData(requestid: string): any {
+    return this.extendedData[requestid];
   }
 
   _verifyAttestationParams(attestationParams: SignedAttRequest): boolean {
