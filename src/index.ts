@@ -17,6 +17,7 @@ class PrimusZKTLS {
   appSecret?: string;
   options: InitOptions;
   extendedData: Record<string, any>;
+  latestRunningMobileRequest?: SignedAttRequest;
 
   constructor() {
     this.isInitialized = false
@@ -239,6 +240,11 @@ class PrimusZKTLS {
     const newWin = window.open(url, "_self");
     console.log("startAttestationMobile newWin=", newWin);
     const attestationParams = JSON.parse(attestationParamsStr) as SignedAttRequest;
+    if (this.latestRunningMobileRequest) {
+      attestationParams.attRequest.requestid = this.latestRunningMobileRequest.attRequest.requestid;
+    } else {
+      this.latestRunningMobileRequest = attestationParams;
+    }
     const requestid = attestationParams.attRequest.requestid;
     const recipient = attestationParams.attRequest.userAddress;
     let queryurl = `https://api.padolabs.org/attestation/result?requestId=${requestid}&recipient=${recipient}`;
@@ -254,6 +260,7 @@ class PrimusZKTLS {
             if (response.rc === 0 && response.result.status === "SUCCESS") {
                 clearInterval(timer);
                 clearTimeout(timeoutTimer);
+                this.latestRunningMobileRequest = undefined;
                 resolve(response.result.result);
             } else if (response.rc === 0 && response.result.status === "FAILED") {
                 const errorCode = response.result.result.errorCode;
@@ -261,6 +268,7 @@ class PrimusZKTLS {
                 console.log(`reject error code=${errorCode}, errorMsg=${errorMsg}`);
                 clearInterval(timer);
                 clearTimeout(timeoutTimer);
+                this.latestRunningMobileRequest = undefined;
                 reject(new ZkAttestationError(errorCode, '', errorMsg));
             }
         } catch (error) {
@@ -271,6 +279,7 @@ class PrimusZKTLS {
       const timeoutTimer = setTimeout(() => {
           console.log("reject timeout");
           clearInterval(timer);
+          this.latestRunningMobileRequest = undefined;
           reject(new ZkAttestationError('01000', '', ''));
       }, ATTESTATIONPOLLINGTIMEOUTMOBILE);
     });
