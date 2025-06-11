@@ -17,7 +17,7 @@ class PrimusZKTLS {
   appSecret?: string;
   options: InitOptions;
   extendedData: Record<string, any>;
-  latestRunningMobileRequest?: SignedAttRequest;
+  latestRunningMobileRequest?: string;
 
   constructor() {
     this.isInitialized = false
@@ -236,15 +236,15 @@ class PrimusZKTLS {
   }
 
   async startAttestationMobile(attestationParamsStr: string): Promise<Attestation> {
+    if (this.latestRunningMobileRequest) {
+      attestationParamsStr = this.latestRunningMobileRequest;
+    } else {
+      this.latestRunningMobileRequest = attestationParamsStr;
+    }
     const url = this.GetAttestationMobileUrl(attestationParamsStr);
     const newWin = window.open(url, "_self");
     console.log("startAttestationMobile newWin=", newWin);
     const attestationParams = JSON.parse(attestationParamsStr) as SignedAttRequest;
-    if (this.latestRunningMobileRequest) {
-      attestationParams.attRequest.requestid = this.latestRunningMobileRequest.attRequest.requestid;
-    } else {
-      this.latestRunningMobileRequest = attestationParams;
-    }
     const requestid = attestationParams.attRequest.requestid;
     const recipient = attestationParams.attRequest.userAddress;
     let queryurl = `https://api.padolabs.org/attestation/result?requestId=${requestid}&recipient=${recipient}`;
