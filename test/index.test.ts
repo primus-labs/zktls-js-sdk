@@ -1,6 +1,6 @@
 import { encodeRequest, encodeResponse, encodeAttestation } from "../src/utils"
 import { Attestation, AttNetworkRequest, AttNetworkResponseResolve } from "../src/index.d"
-import PrimusZKTLS from '../src/index';
+import { PrimusZKTLS } from '../src/index';
 import { ethers } from "ethers";
 
 describe('listData function', () => {
@@ -41,6 +41,12 @@ describe('listData function', () => {
     zkTLS.verifyAttestation(att);
   });
 
+  it('verifySolanaAttestation', async () => {
+    const att = createSolanaAttestation();
+    const zkTLS = new PrimusZKTLS();
+    zkTLS.verifyAttestation(att);
+  });
+
   function createNetworkRequest() {
     const attReq: AttNetworkRequest = {
       url: "https://example.com/apiwdewd/121s1qs1qs?DDDSADWDDAWDWAWWAWW",
@@ -77,5 +83,43 @@ describe('listData function', () => {
     };
     return att;
   }
+
+  function createSolanaAttestation() {
+    const request = {
+      "url": "https://developers.google.com/_d/profile/user",
+      "header": "",
+      "method": "POST",
+      "body": ""
+    };
+    const response1 = {
+      "keyName": "2",
+      "parseType": "",
+      "parsePath": "$[2]"
+    };
+    let attestor1 = {
+      attestorAddr: "",
+      url: "https://primuslabs.xyz",
+    }
+    let signature =
+      "0x9f61d6d12887d5a3d4a4d4919d3cf8ba43caef3d2f570fbc833d94594b97504b2e3b916f89499b5de97e9d7591fdc3382539e94aef6abb028f6bd2b7a0e6e2511c";
+
+    // const hex = 'eb0c48db39a7d43dc8dffffa7f89fcbcae034331465a1ced296d0b5f6957a97e';
+    // const bytes = Uint8Array.from(Buffer.from(hex, 'hex'));
+    // const publicKey = new PublicKey(bytes);
+    // console.log(publicKey.toBase58());
+    const attestation = {
+      recipient: "GpXg4mC9WjBzYS9qHCFu1uuxm9qRPmyhfivNnUo99YiR",
+      //recipient: Buffer.from("eb0c48db39a7d43dc8dffffa7f89fcbcae034331465a1ced296d0b5f6957a97e".toLowerCase(), "hex"),
+      request: request,
+      reponseResolve: [response1],
+      data: "{\"2\":\"abc@gmail.com\"}",
+      attConditions: "[{\"op\":\"REVEAL_STRING\",\"field\":\"$[2]\"}]",
+      timestamp: 1753839065297,
+      additionParams: "{\"redPacketInfo\":{\"checkParams\":[1,\"google account\"],\"reType\":1,\"id\":\"0x53c51c24e2d85aa4aa6ca58c096d82fdcc268264daa5b6852c2e907caa671770\"},\"algorithmType\":\"proxytls\"}",
+      attestors: [attestor1],
+      signatures: [signature],
+    };
+    return attestation;
+    }
 
 });

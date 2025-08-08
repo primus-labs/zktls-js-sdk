@@ -1,5 +1,6 @@
 import { Attestation, AttNetworkRequest, AttNetworkResponseResolve } from './index.d'
 const { ethers } = require("ethers");
+const { PublicKey } = require('@solana/web3.js');
 
 export function isValidNumericString(value: string) {  
     const regex = /^[0-9]*$/; 
@@ -51,13 +52,26 @@ export function getInstanceProperties(instance:any) {
     return properties;
 }
 
-export function encodeAttestation(att: Attestation) {
+export function encodeSolanaAttestation(att: Attestation) {
     const encodedData = ethers.utils.solidityPack(
-        ["address", "bytes32", "bytes32", "string", "string", "uint64", "string"],
-        [att.recipient, encodeRequest(att.request), encodeResponse(att.reponseResolve), 
+        ["bytes32", "bytes32", "bytes32", "string", "string", "uint64", "string"],
+        [solanaAddressToBytes32(att.recipient), encodeRequest(att.request), encodeResponse(att.reponseResolve),
         att.data, att.attConditions, att.timestamp, att.additionParams]
     );
     return ethers.utils.keccak256(encodedData);
+}
+
+export function encodeAttestation(att: Attestation) {
+    if (isSolanaAddress(att.recipient)) {
+        return encodeSolanaAttestation(att);
+    } else {
+        const encodedData = ethers.utils.solidityPack(
+            ["address", "bytes32", "bytes32", "string", "string", "uint64", "string"],
+            [att.recipient, encodeRequest(att.request), encodeResponse(att.reponseResolve),
+            att.data, att.attConditions, att.timestamp, att.additionParams]
+        );
+        return ethers.utils.keccak256(encodedData);
+    }
 }
 export function encodeRequest(request: AttNetworkRequest) {
     const encodedData = ethers.utils.solidityPack(
@@ -88,4 +102,19 @@ export async function sendRequest(url: string, options?: RequestInit): Promise<a
       console.error('Request failed:', error);
       throw error;
     }
+}
+
+function isSolanaAddress(address: string) {
+  try {
+    const pk = new PublicKey(address);
+    return PublicKey.isOnCurve(pk);
+  } catch (e) {
+    return false;
+  }
+}
+
+function solanaAddressToBytes32(address: string) {
+  const pubkey = new PublicKey(address);
+  const bytes = pubkey.toBytes();
+  return '0x' + Buffer.from(bytes).toString('hex');
 }
