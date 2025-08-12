@@ -3,7 +3,7 @@ import { ATTESTATIONPOLLINGTIME, ATTESTATIONPOLLINGTIMEOUT, PADOADDRESSMAP, ATTE
 import { Attestation, SignedAttRequest, InitOptions } from './index.d'
 import { ZkAttestationError } from './error'
 import { AttRequest } from './classes/AttRequest'
-import { encodeAttestation, sendRequest } from "./utils";
+import { encodeAttestation, sendRequest, isSolanaAddress } from "./utils";
 const packageJson = require('../package.json');
 class PrimusZKTLS {
   private _padoAddress: string;
@@ -328,7 +328,7 @@ class PrimusZKTLS {
     // checkFn('userAddress', userAddress, 'string')
     checkFn('timestamp', timestamp, 'number')
     checkFn('appSignature', appSignature, 'string')
-    const illgelAddr = ethers.utils.isAddress(userAddress)
+    const illgelAddr = ethers.utils.isAddress(userAddress) || isSolanaAddress(userAddress)
     if (!illgelAddr) {
       throw new ZkAttestationError('00005', `Wrong userAddress!`)
     }

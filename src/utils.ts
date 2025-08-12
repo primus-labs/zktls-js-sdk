@@ -104,7 +104,7 @@ export async function sendRequest(url: string, options?: RequestInit): Promise<a
     }
 }
 
-function isSolanaAddress(address: string) {
+export function isSolanaAddress(address: string) {
   try {
     const pk = new PublicKey(address);
     return PublicKey.isOnCurve(pk);
