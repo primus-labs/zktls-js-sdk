@@ -26,7 +26,7 @@ class PrimusZKTLS {
     this.padoExtensionVersion = ''
 
     this.appId = ''
-    this.options = {platform: "pc", env: "production"};
+    this.options = {platform: "pc", env: "production", openAndroidApp: false};
     this._padoAddress = (PADOADDRESSMAP as any)["production"]
     this.extendedData = {};
   }
@@ -39,6 +39,9 @@ class PrimusZKTLS {
     }
     if (options?.env) {
       this.options.env = options?.env;
+    }
+    if (options?.openAndroidApp) {
+      this.options.openAndroidApp = options?.openAndroidApp;
     }
     if (this.options?.env !== "production") {
       this._padoAddress = (PADOADDRESSMAP as any)["development"];
@@ -288,7 +291,12 @@ class PrimusZKTLS {
   GetAttestationMobileUrl(attestationParamsStr: string): string {
     const encodeParams = encodeURIComponent(attestationParamsStr);
     if (this.options?.platform === "android") {
-      const url = `https://primuslabs.xyz/attestation-processor?signedRequest=${encodeParams}`;
+      let url;
+      if (this.options.openAndroidApp) {
+        url = `primuslabs://primuslabs.xyz/attestation-processor?signedRequest=${encodeParams}`;
+      } else {
+        url = `https://primuslabs.xyz/attestation-processor?signedRequest=${encodeParams}`;
+      }
       return url;
     } else if (this.options?.platform === "ios") {
       const url = `https://appclip.apple.com/id?p=PrimusLabs.Primus.AppClip&signedRequest=${encodeParams}`;

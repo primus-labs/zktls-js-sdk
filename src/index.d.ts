@@ -101,6 +101,7 @@ export type AttConditions =  AttCondition[]
 export type InitOptions = {
   platform?: string,
   env?: Env,
+  openAndroidApp?: boolean
 }
 
 export type ComputeMode = 'nonecomplete' | 'nonepartial' | 'normal';
