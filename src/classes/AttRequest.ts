@@ -13,6 +13,7 @@ export class AttRequest {
   requestid?: string;
   backUrl?: string;
   computeMode?: ComputeMode;
+  noProxy?: boolean;
 
   constructor(baseAttestationParams: BaseAttestationParams) {
     const { appId, attTemplateID, userAddress } = baseAttestationParams
@@ -27,6 +28,7 @@ export class AttRequest {
     this.requestid = uuidv4();
     this.backUrl = "";
     this.computeMode = "normal";
+    this.noProxy = true;
   }
   setAdditionParams(additionParams: string) {
     this.additionParams = additionParams
@@ -45,6 +47,9 @@ export class AttRequest {
   }
   setComputeMode(computeMode: ComputeMode) {
     this.computeMode = computeMode;
+  }
+  setNoProxy(noProxy: boolean) {
+    this.noProxy = noProxy
   }
   toJsonString() {
     return JSON.stringify(getInstanceProperties(this));
