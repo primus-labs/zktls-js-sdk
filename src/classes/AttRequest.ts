@@ -1,4 +1,4 @@
-import type { AttMode, BaseAttestationParams,AttConditions, ComputeMode } from '../index.d'
+import type { AttMode, BaseAttestationParams, AttConditions, ComputeMode } from '../index.d'
 import { getInstanceProperties } from '../utils'
 import { v4 as uuidv4 } from 'uuid';
 
@@ -14,6 +14,7 @@ export class AttRequest {
   backUrl?: string;
   computeMode?: ComputeMode;
   noProxy?: boolean;
+  allJsonResponseFlag?: 'true' | 'false';
 
   constructor(baseAttestationParams: BaseAttestationParams) {
     const { appId, attTemplateID, userAddress } = baseAttestationParams
@@ -29,11 +30,12 @@ export class AttRequest {
     this.backUrl = "";
     this.computeMode = "normal";
     this.noProxy = true;
+    this.allJsonResponseFlag = 'false';
   }
   setAdditionParams(additionParams: string) {
     this.additionParams = additionParams
   }
-  setAttMode({algorithmType, resultType='plain'}: AttMode) {
+  setAttMode({ algorithmType, resultType = 'plain' }: AttMode) {
     this.attMode = {
       algorithmType,
       resultType
@@ -50,6 +52,9 @@ export class AttRequest {
   }
   setNoProxy(noProxy: boolean) {
     this.noProxy = noProxy
+  }
+  setAllJsonResponseFlag(allJsonResponseFlag: string) {
+    this.allJsonResponseFlag = allJsonResponseFlag === 'true' ? 'true' : 'false'
   }
   toJsonString() {
     return JSON.stringify(getInstanceProperties(this));

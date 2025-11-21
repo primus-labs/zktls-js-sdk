@@ -18,6 +18,8 @@ class PrimusZKTLS {
   options: InitOptions;
   extendedData: Record<string, any>;
   latestRunningMobileRequest?: string;
+  allJsonResponseFlag?: 'true' | 'false';
+  _allJsonResponse: any;
 
   constructor() {
     this.isInitialized = false
@@ -26,9 +28,11 @@ class PrimusZKTLS {
     this.padoExtensionVersion = ''
 
     this.appId = ''
-    this.options = {platform: "pc", env: "production", openAndroidApp: false};
+    this.options = { platform: "pc", env: "production", openAndroidApp: false };
     this._padoAddress = (PADOADDRESSMAP as any)["production"]
     this.extendedData = {};
+    this.allJsonResponseFlag = 'false'
+    this._allJsonResponse = {};
   }
 
   init(appId: string, appSecret?: string, options?: InitOptions): Promise<string | boolean> {
@@ -149,8 +153,8 @@ class PrimusZKTLS {
         return this.startAttestationMobile(attestationParamsStr);
       }
 
-      let formatParams: any = { ...attestationParams,sdkVersion: packageJson.version }
-
+      let formatParams: any = { ...attestationParams, sdkVersion: packageJson.version }
+      this.allJsonResponseFlag = attestationParams?.attRequest?.allJsonResponseFlag === 'true' ? 'true' : 'false'
       window.postMessage({
         target: "padoExtension",
         origin: "padoZKAttestationJSSDK",
@@ -192,7 +196,7 @@ class PrimusZKTLS {
               } else {
                 // this._attestLoading = false
                 window?.removeEventListener('message', eventListener);
-                const { code,data } = errorData
+                const { code, data } = errorData
                 reject(new ZkAttestationError(code, '', data))
               }
             }
@@ -205,9 +209,27 @@ class PrimusZKTLS {
                 clearTimeout(timeoutTimer)
                 console.timeEnd('startAttestCost')
                 window?.removeEventListener('message', eventListener);
-                const {extendedData, ...formatParams2} = data;
+                const { extendedData, allJsonResponse, ...formatParams2 } = data;
                 let requestid = attestationParams.attRequest.requestid ? attestationParams.attRequest.requestid : '';
                 this.extendedData[requestid] = extendedData;
+
+                // feat: allJsonResponse
+                let responseResolvesObj = formatParams2?.reponseResolve
+
+                const responseIds = responseResolvesObj.map((i: any) =>
+                  i?.keyName)
+                // console.log('responseIds', responseIds, responseResolvesObj, formatParams2)
+
+                if (this.allJsonResponseFlag === 'true') {
+                  this._allJsonResponse[requestid] = allJsonResponse.map((i: any, k: number) => {
+                    return {
+                      id: responseIds[k],
+                      content: i
+                    }
+                  })
+                  formatParams2.requestid = requestid
+                }
+
                 resolve(formatParams2)
               } else {
                 clearInterval(pollingTimer)
@@ -257,33 +279,33 @@ class PrimusZKTLS {
     return new Promise((resolve, reject) => {
       const timer = setInterval(async () => {
         try {
-            const response = await sendRequest(queryurl);
-            console.log("query response=", response);
-            console.log("query response.result.status=", response.result.status);
-            if (response.rc === 0 && response.result.status === "SUCCESS") {
-                clearInterval(timer);
-                clearTimeout(timeoutTimer);
-                this.latestRunningMobileRequest = undefined;
-                resolve(response.result.result);
-            } else if (response.rc === 0 && response.result.status === "FAILED") {
-                const errorCode = response.result.result.errorCode;
-                const errorMsg = response.result.result.errorMessage;
-                console.log(`reject error code=${errorCode}, errorMsg=${errorMsg}`);
-                clearInterval(timer);
-                clearTimeout(timeoutTimer);
-                this.latestRunningMobileRequest = undefined;
-                reject(new ZkAttestationError(errorCode, '', errorMsg));
-            }
+          const response = await sendRequest(queryurl);
+          console.log("query response=", response);
+          console.log("query response.result.status=", response.result.status);
+          if (response.rc === 0 && response.result.status === "SUCCESS") {
+            clearInterval(timer);
+            clearTimeout(timeoutTimer);
+            this.latestRunningMobileRequest = undefined;
+            resolve(response.result.result);
+          } else if (response.rc === 0 && response.result.status === "FAILED") {
+            const errorCode = response.result.result.errorCode;
+            const errorMsg = response.result.result.errorMessage;
+            console.log(`reject error code=${errorCode}, errorMsg=${errorMsg}`);
+            clearInterval(timer);
+            clearTimeout(timeoutTimer);
+            this.latestRunningMobileRequest = undefined;
+            reject(new ZkAttestationError(errorCode, '', errorMsg));
+          }
         } catch (error) {
           console.log("query moblie attestaion result error.");
         }
       }, ATTESTATIONPOLLINGTIME);
 
       const timeoutTimer = setTimeout(() => {
-          console.log("reject timeout");
-          clearInterval(timer);
-          this.latestRunningMobileRequest = undefined;
-          reject(new ZkAttestationError('01000', '', ''));
+        console.log("reject timeout");
+        clearInterval(timer);
+        this.latestRunningMobileRequest = undefined;
+        reject(new ZkAttestationError('01000', '', ''));
       }, ATTESTATIONPOLLINGTIMEOUTMOBILE);
     });
   }
@@ -341,6 +363,10 @@ class PrimusZKTLS {
       throw new ZkAttestationError('00005', `Wrong userAddress!`)
     }
     return true
+  }
+
+  getAllJsonResponse(requestid: string): string | undefined {
+    return this._allJsonResponse[requestid]
   }
 
 }
