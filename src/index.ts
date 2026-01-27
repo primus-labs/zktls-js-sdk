@@ -4,6 +4,7 @@ import { Attestation, SignedAttRequest, InitOptions } from './index.d'
 import { ZkAttestationError } from './error'
 import { AttRequest } from './classes/AttRequest'
 import { encodeAttestation, sendRequest, isSolanaAddress } from "./utils";
+import { getAppQuote } from './api';
 const packageJson = require('../package.json');
 class PrimusZKTLS {
   private _padoAddress: string;
@@ -148,6 +149,9 @@ class PrimusZKTLS {
     try {
       const attestationParams = JSON.parse(attestationParamsStr) as SignedAttRequest;
       this._verifyAttestationParams(attestationParams);
+
+      // Check app quote before starting attestation
+      await this._checkAppQuote();
 
       if (this.options?.platform === "android" || this.options?.platform === "ios") {
         return this.startAttestationMobile(attestationParamsStr);
@@ -338,6 +342,54 @@ class PrimusZKTLS {
 
   getExtendedData(requestid: string): any {
     return this.extendedData[requestid];
+  }
+
+  /**
+   * Check app quote and perform business logic based on the result
+   * @private
+   * @throws {ZkAttestationError} Only throws business logic errors, network errors are caught and ignored
+   */
+  private async _checkAppQuote(): Promise<void> {
+    try {
+      const {rc, result} = await getAppQuote({ appId: this.appId });
+      // console.log('_checkAppQuote', result)
+      // Business logic based on quote result
+      if (rc !== 0) {
+        // Handle error case - you can customize this based on your requirements
+        console.warn('App quote check failed:', result?.msg);
+        // Optionally throw error or handle differently based on business requirements
+        // throw new ZkAttestationError('00005', result?.msg || 'App quote check failed');
+      }
+      if (!result ) { 
+        throw new ZkAttestationError('-1002001');
+      }
+      if (!result.expiryTime && (!result.remainingQuota  || result.remainingQuota <= 0 ) ) {
+        throw new ZkAttestationError('-1002003');
+      }
+      if (result.expiryTime ) {
+        if (result.expiryTime < Date.now()) {
+          throw new ZkAttestationError('-1002004');
+        }
+        if (!result.remainingQuota || result.remainingQuota <= 0) {
+          throw new ZkAttestationError('-1002005');
+        }
+      }
+      
+      // Add other business logic based on quoteResult.result if needed
+      // For example:
+      // if (quoteResult.result?.quotaExceeded) {
+      //   throw new ZkAttestationError('00005', 'Quota exceeded');
+      // }
+    } catch (error: any) {
+      // If it's a business logic error (ZkAttestationError), rethrow it
+      if (error instanceof ZkAttestationError) {
+        throw error;
+      }
+      // For network errors or other exceptions, catch and log but don't throw
+      // This allows the execution to continue even if the quote check fails
+      console.error('Failed to check app quote (network error or other exception):', error);
+      // Don't throw - allow execution to continue
+    }
   }
 
   _verifyAttestationParams(attestationParams: SignedAttRequest): boolean {
