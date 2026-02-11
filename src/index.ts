@@ -5,7 +5,9 @@ import { ZkAttestationError } from './error'
 import { AttRequest } from './classes/AttRequest'
 import { encodeAttestation, sendRequest, isSolanaAddress } from "./utils";
 import { getAppQuote } from './api';
-const packageJson = require('../package.json');
+import { eventReport } from './utils/eventReport';
+import type { ClientType } from './api';
+const packageJson = require('../package.json') as { name: string; version: string };
 class PrimusZKTLS {
   private _padoAddress: string;
   // private _attestLoading: boolean;
@@ -157,6 +159,15 @@ class PrimusZKTLS {
         return this.startAttestationMobile(attestationParamsStr);
       }
 
+      const eventReportBaseParams = {
+        source: '',
+        clientType: packageJson.name as ClientType,
+        appId: attestationParams.attRequest.appId,
+        templateId: attestationParams.attRequest.attTemplateID || '',
+        address: attestationParams.attRequest.userAddress,
+        ext: {} as Record<string, any>
+      };
+
       let formatParams: any = { ...attestationParams, sdkVersion: packageJson.version }
       this.allJsonResponseFlag = attestationParams?.attRequest?.allJsonResponseFlag === 'true' ? 'true' : 'false'
       window.postMessage({
@@ -176,7 +187,7 @@ class PrimusZKTLS {
               console.log('sdk receive getAttestationRes', params)
               const { result, errorData } = params
               if (result) {
-                timeoutTimer = setTimeout(() => {
+                timeoutTimer = setTimeout(async () => {
                   if (pollingTimer) {
                     clearInterval(pollingTimer)
                     // this._attestLoading = false
@@ -185,6 +196,11 @@ class PrimusZKTLS {
                       origin: "padoZKAttestationJSSDK",
                       name: "getAttestationResultTimeout",
                       params: {}
+                    });
+                    await eventReport({
+                      ...eventReportBaseParams,
+                      status: 'FAILED',
+                      detail: { code: '00002', desc: '' }
                     });
                     reject(new ZkAttestationError('00002', 'The SDK reported a timeout.', ''))
                   }
@@ -200,7 +216,12 @@ class PrimusZKTLS {
               } else {
                 // this._attestLoading = false
                 window?.removeEventListener('message', eventListener);
-                const { code, data } = errorData
+                const { code, data } = errorData;
+                await eventReport({
+                  ...eventReportBaseParams,
+                  status: 'FAILED',
+                  detail: { code, desc: '' }
+                });
                 reject(new ZkAttestationError(code, '', data))
               }
             }
@@ -234,16 +255,22 @@ class PrimusZKTLS {
                   formatParams2.requestid = requestid
                 }
 
+                await eventReport({
+                  ...eventReportBaseParams,
+                  status: 'SUCCESS'
+                });
                 resolve(formatParams2)
               } else {
                 clearInterval(pollingTimer)
                 clearTimeout(timeoutTimer)
                 console.timeEnd('startAttestCost')
                 window?.removeEventListener('message', eventListener);
-                const { code, data/*desc*/ } = errorData
-                // if (attestationParams?.attestationTypeID === '101') {
-                //   reject(new ZkAttestationError(code, desc))
-                // } else {
+                const { code, data/*desc*/ } = errorData;
+                await eventReport({
+                  ...eventReportBaseParams,
+                  status: 'FAILED',
+                  detail: { code, desc: '' }
+                });
                 reject(new ZkAttestationError(code, '', data))
 
 
@@ -274,6 +301,14 @@ class PrimusZKTLS {
     const newWin = window.open(url, "_self");
     console.log("startAttestationMobile newWin=", newWin);
     const attestationParams = JSON.parse(attestationParamsStr) as SignedAttRequest;
+    const eventReportBaseParams = {
+      source: '',
+      clientType: packageJson.name as ClientType,
+      appId: attestationParams.attRequest.appId,
+      templateId: attestationParams.attRequest.attTemplateID || '',
+      address: attestationParams.attRequest.userAddress,
+      ext: {} as Record<string, any>
+    };
     const requestid = attestationParams.attRequest.requestid;
     const recipient = attestationParams.attRequest.userAddress;
     let queryurl = `https://api.padolabs.org/attestation/result?requestId=${requestid}&recipient=${recipient}`;
@@ -290,6 +325,10 @@ class PrimusZKTLS {
             clearInterval(timer);
             clearTimeout(timeoutTimer);
             this.latestRunningMobileRequest = undefined;
+            await eventReport({
+              ...eventReportBaseParams,
+              status: 'SUCCESS'
+            });
             resolve(response.result.result);
           } else if (response.rc === 0 && response.result.status === "FAILED") {
             const errorCode = response.result.result.errorCode;
@@ -298,6 +337,11 @@ class PrimusZKTLS {
             clearInterval(timer);
             clearTimeout(timeoutTimer);
             this.latestRunningMobileRequest = undefined;
+            await eventReport({
+              ...eventReportBaseParams,
+              status: 'FAILED',
+              detail: { code: errorCode, desc: errorMsg || '' }
+            });
             reject(new ZkAttestationError(errorCode, '', errorMsg));
           }
         } catch (error) {
@@ -305,10 +349,15 @@ class PrimusZKTLS {
         }
       }, ATTESTATIONPOLLINGTIME);
 
-      const timeoutTimer = setTimeout(() => {
+      const timeoutTimer = setTimeout(async () => {
         console.log("reject timeout");
         clearInterval(timer);
         this.latestRunningMobileRequest = undefined;
+        await eventReport({
+          ...eventReportBaseParams,
+          status: 'FAILED',
+          detail: { code: '01000', desc: '' }
+        });
         reject(new ZkAttestationError('01000', '', ''));
       }, ATTESTATIONPOLLINGTIMEOUTMOBILE);
     });
@@ -424,3 +473,6 @@ class PrimusZKTLS {
 }
 
 export { PrimusZKTLS, AttRequest };
+export { eventReport } from './utils/eventReport';
+export { reportEvent } from './api';
+export type { EventReportRawData, ClientType } from './api';
