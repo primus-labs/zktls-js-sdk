@@ -1,6 +1,6 @@
 import { Attestation, AttNetworkRequest, AttNetworkResponseResolve } from './index.d'
-const { ethers } = require("ethers");
-const { PublicKey } = require('@solana/web3.js');
+import { ethers } from "ethers";
+import { PublicKey } from '@solana/web3.js';
 
 export function isValidNumericString(value: string) {  
     const regex = /^[0-9]*$/; 

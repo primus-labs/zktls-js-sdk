@@ -7,7 +7,7 @@ import { encodeAttestation, sendRequest, isSolanaAddress } from "./utils";
 import { getAppQuote } from './api';
 import { eventReport } from './utils/eventReport';
 import type { ClientType } from './api';
-const packageJson = require('../package.json') as { name: string; version: string };
+import packageJson from '../package.json' assert { type: 'json' };
 class PrimusZKTLS {
   private _padoAddress: string;
   // private _attestLoading: boolean;

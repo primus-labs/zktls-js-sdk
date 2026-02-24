@@ -3,6 +3,7 @@
   "version": "0.3.8",
   "author": "Primus Labs <dev@primuslabs.org>",
   "description": "Primus zkTLS js sdk",
+  "type": "module",
   "repository": {
     "type": "git",
     "url": "https://github.com/primus-labs/zktls-js-sdk.git"

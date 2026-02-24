@@ -1,8 +1,8 @@
 {
     "compilerOptions": {
       "target": "esnext",
-      "module": "commonjs",
-      "moduleResolution": "node",
+      "module": "ESNext",
+      "moduleResolution": "bundler",
       "importHelpers": true,
       "declaration": true,
       "sourceMap": true,
