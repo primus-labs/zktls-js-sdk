@@ -8,6 +8,8 @@ import { getAppQuote } from './api';
 import { eventReport } from './utils/eventReport';
 import type { ClientType } from './api';
 import packageJson from '../package.json' assert { type: 'json' };
+const PACKAGEJSONVERSION = packageJson.version as string;
+const PACKAGENAME = packageJson.name as ClientType;
 class PrimusZKTLS {
   private _padoAddress: string;
   // private _attestLoading: boolean;
@@ -68,7 +70,8 @@ class PrimusZKTLS {
           origin: "padoZKAttestationJSSDK",
           name: "initAttestation",
           params: {
-            sdkVersion: packageJson.version
+            sdkVersion: PACKAGEJSONVERSION,
+            sdkName: PACKAGENAME,
           }
         });
 
@@ -161,14 +164,14 @@ class PrimusZKTLS {
 
       const eventReportBaseParams = {
         source: '',
-        clientType: packageJson.name as ClientType,
+        clientType: PACKAGENAME as ClientType,
         appId: attestationParams.attRequest.appId,
         templateId: attestationParams.attRequest.attTemplateID || '',
         address: attestationParams.attRequest.userAddress,
         ext: {} as Record<string, any>
       };
 
-      let formatParams: any = { ...attestationParams, sdkVersion: packageJson.version }
+      let formatParams: any = { ...attestationParams, sdkVersion: PACKAGEJSONVERSION, sdkName: PACKAGENAME }
       this.allJsonResponseFlag = attestationParams?.attRequest?.allJsonResponseFlag === 'true' ? 'true' : 'false'
       window.postMessage({
         target: "padoExtension",
@@ -191,6 +194,7 @@ class PrimusZKTLS {
                   if (pollingTimer) {
                     clearInterval(pollingTimer)
                     // this._attestLoading = false
+                    window?.removeEventListener('message', eventListener);
                     window.postMessage({
                       target: "padoExtension",
                       origin: "padoZKAttestationJSSDK",
@@ -303,7 +307,7 @@ class PrimusZKTLS {
     const attestationParams = JSON.parse(attestationParamsStr) as SignedAttRequest;
     const eventReportBaseParams = {
       source: '',
-      clientType: packageJson.name as ClientType,
+      clientType: PACKAGENAME as ClientType,
       appId: attestationParams.attRequest.appId,
       templateId: attestationParams.attRequest.attTemplateID || '',
       address: attestationParams.attRequest.userAddress,
