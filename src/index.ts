@@ -71,7 +71,7 @@ class PrimusZKTLS {
           name: "initAttestation",
           params: {
             sdkVersion: PACKAGEJSONVERSION,
-            sdkName: PACKAGENAME,
+            clientType: PACKAGENAME,
           }
         });
 
@@ -171,7 +171,7 @@ class PrimusZKTLS {
         ext: {} as Record<string, any>
       };
 
-      let formatParams: any = { ...attestationParams, sdkVersion: PACKAGEJSONVERSION, sdkName: PACKAGENAME }
+      let formatParams: any = { ...attestationParams, sdkVersion: PACKAGEJSONVERSION, clientType: PACKAGENAME}
       this.allJsonResponseFlag = attestationParams?.attRequest?.allJsonResponseFlag === 'true' ? 'true' : 'false'
       window.postMessage({
         target: "padoExtension",
