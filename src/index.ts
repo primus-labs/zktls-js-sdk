@@ -25,6 +25,7 @@ class PrimusZKTLS {
   latestRunningMobileRequest?: string;
   allJsonResponseFlag?: 'true' | 'false';
   _allJsonResponse: any;
+  private _allPrivateData: Record<string, any>;
 
   constructor() {
     this.isInitialized = false
@@ -38,6 +39,7 @@ class PrimusZKTLS {
     this.extendedData = {};
     this.allJsonResponseFlag = 'false'
     this._allJsonResponse = {};
+    this._allPrivateData = {};
   }
 
   init(appId: string, appSecret?: string, options?: InitOptions): Promise<string | boolean> {
@@ -238,9 +240,17 @@ class PrimusZKTLS {
                 clearTimeout(timeoutTimer)
                 console.timeEnd('startAttestCost')
                 window?.removeEventListener('message', eventListener);
-                const { extendedData, allJsonResponse, ...formatParams2 } = data;
+                const { extendedData, allJsonResponse, privateData, ...formatParams2 } = data;
                 let requestid = attestationParams.attRequest.requestid ? attestationParams.attRequest.requestid : '';
                 this.extendedData[requestid] = extendedData;
+  
+                if (privateData) {
+                  try{
+                    this._allPrivateData[requestid] = JSON.parse(privateData);
+                  } catch {
+
+                  }
+                }
 
                 // feat: allJsonResponse
                 let responseResolvesObj = formatParams2?.reponseResolve
@@ -395,6 +405,21 @@ class PrimusZKTLS {
 
   getExtendedData(requestid: string): any {
     return this.extendedData[requestid];
+  }
+
+  getPrivateData(requestid: string, keyName?: string): object | undefined {
+    const privateData = this._allPrivateData[requestid];
+    if (!privateData) {
+      return undefined;
+    }
+    if (keyName === undefined) {
+      return privateData;
+    }
+    const plainDataKey = `${keyName}_plain`;
+    return  {
+      [keyName]: privateData[keyName],
+      [plainDataKey]: privateData[plainDataKey]
+    };
   }
 
   /**
