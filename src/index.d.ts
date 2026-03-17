@@ -69,6 +69,8 @@ export type BaseAttestationParams = {
   appId: string;
   attTemplateID: string;
   userAddress: string;
+  /** Attestation polling timeout in milliseconds. */
+  timeout?: number;
 }
 export type FullAttestationParams = BaseAttestationParams & {
   timestamp: number;

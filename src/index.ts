@@ -117,13 +117,19 @@ class PrimusZKTLS {
     }
   }
 
-  generateRequestParams(attTemplateID: string, userAddress?: string): AttRequest {
+  /**
+   * @param attTemplateID - Attestation template ID
+   * @param userAddress - Optional user address (defaults to zero address if omitted)
+   * @param timeout - Optional attestation polling timeout in milliseconds
+   */
+  generateRequestParams(attTemplateID: string, userAddress?: string, timeout?: number): AttRequest {
     const userAddr = userAddress || "0x0000000000000000000000000000000000000000"
 
     return new AttRequest({
       appId: this.appId,
       attTemplateID,
-      userAddress: userAddr
+      userAddress: userAddr,
+      ...(timeout !== undefined && { timeout })
     })
   }
 
@@ -173,6 +179,7 @@ class PrimusZKTLS {
         ext: {} as Record<string, any>
       };
 
+      const pollingTimeout = attestationParams.attRequest?.timeout ?? ATTESTATIONPOLLINGTIMEOUT;
       let formatParams: any = { ...attestationParams, sdkVersion: PACKAGEJSONVERSION, clientType: PACKAGENAME}
       this.allJsonResponseFlag = attestationParams?.attRequest?.allJsonResponseFlag === 'true' ? 'true' : 'false'
       window.postMessage({
@@ -210,7 +217,7 @@ class PrimusZKTLS {
                     });
                     reject(new ZkAttestationError('00002', 'The SDK reported a timeout.', ''))
                   }
-                }, ATTESTATIONPOLLINGTIMEOUT)
+                }, pollingTimeout)
                 pollingTimer = setInterval(() => {
                   window.postMessage({
                     target: "padoExtension",
@@ -218,6 +225,7 @@ class PrimusZKTLS {
                     name: "getAttestationResult",
                     params: {}
                   });
+                  console.log(new Date().toLocaleString(), 'zktls-js-sdk send msg getAttestationResult');
                 }, ATTESTATIONPOLLINGTIME)
               } else {
                 // this._attestLoading = false
@@ -325,6 +333,7 @@ class PrimusZKTLS {
     };
     const requestid = attestationParams.attRequest.requestid;
     const recipient = attestationParams.attRequest.userAddress;
+    const pollingTimeoutMobile = attestationParams.attRequest?.timeout ?? ATTESTATIONPOLLINGTIMEOUTMOBILE;
     let queryurl = `https://api.padolabs.org/attestation/result?requestId=${requestid}&recipient=${recipient}`;
     if (this.options?.env !== "production") {
       queryurl = `https://api-dev.padolabs.org/attestation/result?requestId=${requestid}&recipient=${recipient}`;
@@ -373,7 +382,7 @@ class PrimusZKTLS {
           detail: { code: '01000', desc: '' }
         });
         reject(new ZkAttestationError('01000', '', ''));
-      }, ATTESTATIONPOLLINGTIMEOUTMOBILE);
+      }, pollingTimeoutMobile);
     });
   }
 

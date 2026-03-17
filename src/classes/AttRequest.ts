@@ -15,9 +15,11 @@ export class AttRequest {
   computeMode?: ComputeMode;
   noProxy?: boolean;
   allJsonResponseFlag?: 'true' | 'false';
+  /** Attestation polling timeout in milliseconds. */
+  timeout?: number;
 
   constructor(baseAttestationParams: BaseAttestationParams) {
-    const { appId, attTemplateID, userAddress } = baseAttestationParams
+    const { appId, attTemplateID, userAddress, timeout } = baseAttestationParams
     this.appId = appId
     this.attTemplateID = attTemplateID
     this.userAddress = userAddress
@@ -31,6 +33,9 @@ export class AttRequest {
     this.computeMode = "normal";
     this.noProxy = true;
     this.allJsonResponseFlag = 'false';
+    if (timeout !== undefined) {
+      this.timeout = timeout;
+    }
   }
   setAdditionParams(additionParams: string) {
     this.additionParams = additionParams
