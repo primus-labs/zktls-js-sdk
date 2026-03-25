@@ -120,17 +120,43 @@ class PrimusZKTLS {
   /**
    * @param attTemplateID - Attestation template ID
    * @param userAddress - Optional user address (defaults to zero address if omitted)
-   * @param timeout - Optional attestation polling timeout in milliseconds
+   * @param options - Optional: attestation polling timeout (ms), and/or close data source tab after successful proof on PC
    */
-  generateRequestParams(attTemplateID: string, userAddress?: string, timeout?: number): AttRequest {
+  generateRequestParams(
+    attTemplateID: string,
+    userAddress?: string,
+    options?: { timeout?: number; closeDataSourceOnProofComplete?: boolean }
+  ): AttRequest {
     const userAddr = userAddress || "0x0000000000000000000000000000000000000000"
 
     return new AttRequest({
       appId: this.appId,
       attTemplateID,
       userAddress: userAddr,
-      ...(timeout !== undefined && { timeout })
+      ...(options?.timeout !== undefined && { timeout: options.timeout }),
+      ...(options?.closeDataSourceOnProofComplete === true && {
+        closeDataSourceOnProofComplete: true,
+      }),
     })
+  }
+
+  /**
+   * Ask the extension to close the attestation data source tab (PC). No-op if no tab or mobile.
+   */
+  closeDataSourceTab(): Promise<void> {
+    if (typeof window === 'undefined') {
+      return Promise.resolve();
+    }
+    window.postMessage(
+      {
+        target: 'padoExtension',
+        origin: 'padoZKAttestationJSSDK',
+        name: 'closeDataSourceTab',
+        params: {},
+      },
+      '*'
+    );
+    return Promise.resolve();
   }
 
   async sign(signParams: string): Promise<string> {

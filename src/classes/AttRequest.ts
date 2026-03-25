@@ -17,9 +17,11 @@ export class AttRequest {
   allJsonResponseFlag?: 'true' | 'false';
   /** Attestation polling timeout in milliseconds. */
   timeout?: number;
+  /** When true, extension closes the data source tab after successful proof (PC). */
+  closeDataSourceOnProofComplete?: boolean;
 
   constructor(baseAttestationParams: BaseAttestationParams) {
-    const { appId, attTemplateID, userAddress, timeout } = baseAttestationParams
+    const { appId, attTemplateID, userAddress, timeout, closeDataSourceOnProofComplete } = baseAttestationParams
     this.appId = appId
     this.attTemplateID = attTemplateID
     this.userAddress = userAddress
@@ -35,6 +37,16 @@ export class AttRequest {
     this.allJsonResponseFlag = 'false';
     if (timeout !== undefined) {
       this.timeout = timeout;
+    }
+    if (closeDataSourceOnProofComplete === true) {
+      this.closeDataSourceOnProofComplete = true;
+    }
+  }
+  setCloseDataSourceOnProofComplete(value: boolean) {
+    if (value === true) {
+      this.closeDataSourceOnProofComplete = true;
+    } else {
+      delete this.closeDataSourceOnProofComplete;
     }
   }
   setAdditionParams(additionParams: string) {

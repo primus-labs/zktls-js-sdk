@@ -71,6 +71,8 @@ export type BaseAttestationParams = {
   userAddress: string;
   /** Attestation polling timeout in milliseconds. */
   timeout?: number;
+  /** When true, extension closes the data source browser tab after successful proof (PC only). */
+  closeDataSourceOnProofComplete?: boolean;
 }
 export type FullAttestationParams = BaseAttestationParams & {
   timestamp: number;
