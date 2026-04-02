@@ -1,4 +1,4 @@
-import { Attestation, AttNetworkRequest, AttNetworkResponseResolve } from './index.d'
+import type { Attestation, AttNetworkRequest, AttNetworkResponseResolve } from './types.js';
 import { ethers } from "ethers";
 import { PublicKey } from '@solana/web3.js';
 

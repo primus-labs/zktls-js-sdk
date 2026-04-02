@@ -1,4 +1,3 @@
-import { AttRequest } from './classes/AttRequest';
 export type AttestationParams = {
   chainID: number;
   walletAddress: string;

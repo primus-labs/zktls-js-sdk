@@ -1,8 +1,8 @@
-import { request } from '../utils/httpRequest';
-import { BASEAPI } from '../config/constants';
-import type { ApiResponse, EventReportRawData, EventReportRequest } from './types';
+import { request } from '../utils/httpRequest.js';
+import { BASEAPI } from '../config/constants.js';
+import type { ApiResponse, EventReportRawData, EventReportRequest } from './types.js';
 
-export type { ApiResponse, EventDetail, ClientType, EventReportRawData, EventReportRequest } from './types';
+export type { ApiResponse, EventDetail, ClientType, EventReportRawData, EventReportRequest } from './types.js';
 
 export function getAppQuote(params: { appId: string }): Promise<ApiResponse> {
   return request<ApiResponse>({

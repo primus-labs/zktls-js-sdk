@@ -1,5 +1,5 @@
-import { reportEvent } from '../api';
-import type { EventReportRawData } from '../api';
+import { reportEvent } from '../api/index.js';
+import type { EventReportRawData } from '../api/index.js';
 
 async function eventReport(rawDataObj: EventReportRawData) {
   try {

@@ -13,9 +13,17 @@
   "files": [
     "./dist"
   ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
   "scripts": {
+    "prebuild": "node scripts/sync-package-meta.mjs",
     "build": "rm -rf dist && tsc --build tsconfig.json",
-    "build:test": "rm -rf dist && tsc --build tsconfig.json",
+    "build:test": "node scripts/sync-package-meta.mjs && rm -rf dist && tsc --build tsconfig.json",
     "lint": "eslint -c .eslintrc --ext .ts src",
     "format": "prettier --check --write src/**/*.ts  --config .prettierrc",
     "pretest:integration": "npm run build && npm link",
@@ -39,6 +47,9 @@
     "typescript": "^5.4.5"
   },
   "jest": {
+    "moduleNameMapper": {
+      "^(\\.\\.?\\/.+)\\.js$": "$1"
+    },
     "transform": {
       "^.+\\.(ts|tsx)$": "ts-jest"
     },
@@ -53,5 +64,8 @@
     "@solana/web3.js": "^1.98.4",
     "ethers": "^5.7.2",
     "uuid": "^11.0.4"
+  },
+  "directories": {
+    "test": "test"
   }
 }

@@ -1,5 +1,5 @@
-import type { AttMode, BaseAttestationParams, AttConditions, ComputeMode } from '../index.d'
-import { getInstanceProperties } from '../utils'
+import type { AttMode, BaseAttestationParams, AttConditions, ComputeMode } from '../types.js';
+import { getInstanceProperties } from '../utils.js';
 import { v4 as uuidv4 } from 'uuid';
 
 export class AttRequest {

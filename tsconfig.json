@@ -1,9 +1,9 @@
 {
     "compilerOptions": {
-      "target": "esnext",
-      "module": "ESNext",
-      "moduleResolution": "bundler",
-      "importHelpers": true,
+        "target": "esnext",
+        "module": "NodeNext",
+        "moduleResolution": "NodeNext",
+        "importHelpers": true,
       "declaration": true,
       "sourceMap": true,
       "strict": true,
@@ -22,12 +22,9 @@
       "forceConsistentCasingInFileNames": true,
       "esModuleInterop": true,
       "resolveJsonModule": true,
-      "rootDir": "src",
-      "outDir": "dist",
-      "baseUrl": ".",
-      "paths": {
-        "*": ["src/*", "node_modules/*"]
-      }
+        "rootDir": "src",
+        "outDir": "dist",
+        "baseUrl": "."
     },
     "include": ["src/**/*"],
     "exclude": ["dist", "node_modules"]

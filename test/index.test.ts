@@ -1,5 +1,5 @@
-import { encodeRequest, encodeResponse, encodeAttestation } from "../src/utils"
-import { Attestation, AttNetworkRequest, AttNetworkResponseResolve } from "../src/index.d"
+import { encodeRequest, encodeResponse, encodeAttestation } from '../src/utils';
+import type { Attestation, AttNetworkRequest, AttNetworkResponseResolve } from '../src/types';
 import { PrimusZKTLS } from '../src/index';
 import { ethers } from "ethers";
 

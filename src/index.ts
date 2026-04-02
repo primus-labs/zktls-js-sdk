@@ -1,15 +1,21 @@
 import { ethers } from 'ethers';
-import { ATTESTATIONPOLLINGTIME, ATTESTATIONPOLLINGTIMEOUT, PADOADDRESSMAP, ATTESTATIONPOLLINGTIMEOUTMOBILE } from "./config/constants";
-import { Attestation, SignedAttRequest, InitOptions } from './index.d'
-import { ZkAttestationError } from './error'
-import { AttRequest } from './classes/AttRequest'
-import { encodeAttestation, sendRequest, isSolanaAddress } from "./utils";
-import { getAppQuote } from './api';
-import { eventReport } from './utils/eventReport';
-import type { ClientType } from './api';
-import packageJson from '../package.json' assert { type: 'json' };
-const PACKAGEJSONVERSION = packageJson.version as string;
-const PACKAGENAME = packageJson.name as ClientType;
+import {
+  ATTESTATIONPOLLINGTIME,
+  ATTESTATIONPOLLINGTIMEOUT,
+  PADOADDRESSMAP,
+  ATTESTATIONPOLLINGTIMEOUTMOBILE,
+} from './config/constants.js';
+import { PACKAGE_VERSION, PACKAGE_NAME } from './generated/packageMeta.js';
+import type { Attestation, SignedAttRequest, InitOptions } from './types.js';
+import { ZkAttestationError } from './error.js';
+import { AttRequest } from './classes/AttRequest.js';
+import { encodeAttestation, sendRequest, isSolanaAddress } from './utils.js';
+import { getAppQuote } from './api/index.js';
+import { eventReport } from './utils/eventReport.js';
+import type { ClientType } from './api/index.js';
+
+const PACKAGEJSONVERSION = PACKAGE_VERSION;
+const PACKAGENAME = PACKAGE_NAME as ClientType;
 class PrimusZKTLS {
   private _padoAddress: string;
   // private _attestLoading: boolean;
@@ -537,6 +543,6 @@ class PrimusZKTLS {
 }
 
 export { PrimusZKTLS, AttRequest };
-export { eventReport } from './utils/eventReport';
-export { reportEvent } from './api';
-export type { EventReportRawData, ClientType } from './api';
+export { eventReport } from './utils/eventReport.js';
+export { reportEvent } from './api/index.js';
+export type { EventReportRawData, ClientType } from './api/index.js';
