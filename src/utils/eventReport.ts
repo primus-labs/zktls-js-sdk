@@ -4,10 +4,9 @@ import type { EventReportRawData } from '../api/index.js';
 /**
  * Best-effort telemetry; failures are swallowed so attestation flow is never affected.
  */
-export async function eventReport(rawDataObj: EventReportRawData): Promise<void> {
-  try {
-    await reportEvent(rawDataObj);
-  } catch {
-    /* optional analytics — ignore */
-  }
+export function eventReport(rawDataObj: EventReportRawData): Promise<void> {
+  return Promise.resolve()
+    .then(() => reportEvent(rawDataObj))
+    .then(() => undefined)
+    .catch(() => undefined);
 }

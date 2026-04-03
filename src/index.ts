@@ -242,7 +242,7 @@ class PrimusZKTLS {
                       name: "getAttestationResultTimeout",
                       params: {}
                     });
-                    await eventReport({
+                    void eventReport({
                       ...eventReportBaseParams,
                       status: 'FAILED',
                       detail: { code: '00002', desc: '' }
@@ -263,7 +263,7 @@ class PrimusZKTLS {
                 // this._attestLoading = false
                 window?.removeEventListener('message', eventListener);
                 const { code, data } = errorData;
-                await eventReport({
+                void eventReport({
                   ...eventReportBaseParams,
                   status: 'FAILED',
                   detail: { code, desc: '' }
@@ -309,7 +309,7 @@ class PrimusZKTLS {
                   formatParams2.requestid = requestid
                 }
 
-                await eventReport({
+                void eventReport({
                   ...eventReportBaseParams,
                   status: 'SUCCESS'
                 });
@@ -320,7 +320,7 @@ class PrimusZKTLS {
                 console.timeEnd('startAttestCost')
                 window?.removeEventListener('message', eventListener);
                 const { code, data/*desc*/ } = errorData;
-                await eventReport({
+                void eventReport({
                   ...eventReportBaseParams,
                   status: 'FAILED',
                   detail: { code, desc: '' }
@@ -380,7 +380,7 @@ class PrimusZKTLS {
             clearInterval(timer);
             clearTimeout(timeoutTimer);
             this.latestRunningMobileRequest = undefined;
-            await eventReport({
+            void eventReport({
               ...eventReportBaseParams,
               status: 'SUCCESS'
             });
@@ -392,7 +392,7 @@ class PrimusZKTLS {
             clearInterval(timer);
             clearTimeout(timeoutTimer);
             this.latestRunningMobileRequest = undefined;
-            await eventReport({
+            void eventReport({
               ...eventReportBaseParams,
               status: 'FAILED',
               detail: { code: errorCode, desc: errorMsg || '' }
@@ -408,7 +408,7 @@ class PrimusZKTLS {
         console.log("reject timeout");
         clearInterval(timer);
         this.latestRunningMobileRequest = undefined;
-        await eventReport({
+        void eventReport({
           ...eventReportBaseParams,
           status: 'FAILED',
           detail: { code: '01000', desc: '' }
