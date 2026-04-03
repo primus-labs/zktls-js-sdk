@@ -23,6 +23,7 @@ export const ErrorCodeMAP = {
   '00003':'A verification process is in progress. Please try again later.',
   '00004':'The user closes or cancels the verification process.',
   '00005':'Wrong SDK parameters.',
+  '00006':'No Primus extension is installed.',
   // '00006':'No Primus extension version 0.3.15 or above was detected as installed.',
   // '00007':'Insufficient wallet balance.',
   // '00008':'Failed to submit the proof on-chain. Or other errors in the Wallet operations.',
@@ -73,6 +74,7 @@ export const ErrorCodeMAP = {
   '-1002003':"Trial quota exhausted.",
   '-1002004':"Subscription expired.",
   '-1002005':"Quota exhausted.",
+  // -210001：brevis活动，address 有个property id是identityPropertyId的正在pending的proof(extension)
 }
 export class ZkAttestationError {
   code: ErrorCode;
