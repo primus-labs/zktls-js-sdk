@@ -74,7 +74,7 @@ export const ErrorCodeMAP = {
   '-1002003':"Trial quota exhausted.",
   '-1002004':"Subscription expired.",
   '-1002005':"Quota exhausted.",
-  // -210001：brevis活动，address 有个property id是identityPropertyId的正在pending的proof(extension)
+   '-210001': 'Address has pending proof for identityPropertyId.' // bnbidsdk
 }
 export class ZkAttestationError {
   code: ErrorCode;
