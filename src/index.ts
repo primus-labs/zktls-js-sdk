@@ -186,11 +186,15 @@ class PrimusZKTLS {
       const errorCode = '00001'
       return Promise.reject(new ZkAttestationError(errorCode))
     }
-    if (this._attestLoading) {
-      const errorCode = '00003'
-      return Promise.reject(new ZkAttestationError(errorCode))
+    const isMobilePlatform =
+      this.options?.platform === 'android' || this.options?.platform === 'ios'
+    if (!isMobilePlatform) {
+      if (this._attestLoading) {
+        const errorCode = '00003'
+        return Promise.reject(new ZkAttestationError(errorCode))
+      }
+      this._attestLoading = true
     }
-    this._attestLoading = true
 
     try {
       const attestationParams = JSON.parse(attestationParamsStr) as SignedAttRequest;
@@ -199,10 +203,8 @@ class PrimusZKTLS {
       // Check app quote before starting attestation
       await this._checkAppQuote();
 
-      if (this.options?.platform === "android" || this.options?.platform === "ios") {
-        return this.startAttestationMobile(attestationParamsStr).finally(() => {
-          this._attestLoading = false;
-        });
+      if (isMobilePlatform) {
+        return this.startAttestationMobile(attestationParamsStr);
       }
 
       const eventReportBaseParams = {
@@ -343,7 +345,9 @@ class PrimusZKTLS {
       });
 
     } catch (e: any) {
-      this._attestLoading = false
+      if (!isMobilePlatform) {
+        this._attestLoading = false
+      }
       return Promise.reject(e)
     }
   }
