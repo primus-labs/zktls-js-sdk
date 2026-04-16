@@ -80,6 +80,7 @@ export type FullAttestationParams = BaseAttestationParams & {
   additionParams?: string;
   requestid?: string;
   backUrl?: string;
+  extendedParams?: string;
   allJsonResponseFlag?: 'true' | 'false';
 }
 export type SignedAttRequest = {

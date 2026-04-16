@@ -18,7 +18,7 @@ const PACKAGEJSONVERSION = PACKAGE_VERSION;
 const PACKAGENAME = PACKAGE_NAME as ClientType;
 class PrimusZKTLS {
   private _padoAddress: string;
-  // private _attestLoading: boolean;
+  private _attestLoading: boolean;
 
   isInstalled?: boolean;
   isInitialized: boolean;
@@ -46,6 +46,7 @@ class PrimusZKTLS {
     this.allJsonResponseFlag = 'false'
     this._allJsonResponse = {};
     this._allPrivateData = {};
+    this._attestLoading = false;
   }
 
   init(appId: string, appSecret?: string, options?: InitOptions): Promise<string | boolean> {
@@ -185,11 +186,11 @@ class PrimusZKTLS {
       const errorCode = '00001'
       return Promise.reject(new ZkAttestationError(errorCode))
     }
-    // if (this._attestLoading) {
-    //   const errorCode = '00003'
-    //   return Promise.reject(new ZkAttestationError(errorCode))
-    // }
-    // this._attestLoading = true
+    if (this._attestLoading) {
+      const errorCode = '00003'
+      return Promise.reject(new ZkAttestationError(errorCode))
+    }
+    this._attestLoading = true
 
     try {
       const attestationParams = JSON.parse(attestationParamsStr) as SignedAttRequest;
@@ -199,7 +200,9 @@ class PrimusZKTLS {
       await this._checkAppQuote();
 
       if (this.options?.platform === "android" || this.options?.platform === "ios") {
-        return this.startAttestationMobile(attestationParamsStr);
+        return this.startAttestationMobile(attestationParamsStr).finally(() => {
+          this._attestLoading = false;
+        });
       }
 
       const eventReportBaseParams = {
@@ -234,7 +237,7 @@ class PrimusZKTLS {
                 timeoutTimer = setTimeout(async () => {
                   if (pollingTimer) {
                     clearInterval(pollingTimer)
-                    // this._attestLoading = false
+                    this._attestLoading = false
                     window?.removeEventListener('message', eventListener);
                     window.postMessage({
                       target: "padoExtension",
@@ -260,7 +263,7 @@ class PrimusZKTLS {
                   console.log(new Date().toLocaleString(), 'zktls-js-sdk send msg getAttestationResult');
                 }, ATTESTATIONPOLLINGTIME)
               } else {
-                // this._attestLoading = false
+                this._attestLoading = false
                 window?.removeEventListener('message', eventListener);
                 const { code, data } = errorData;
                 void eventReport({
@@ -274,7 +277,7 @@ class PrimusZKTLS {
             if (name === "startAttestationRes") {
               const { result, data, errorData } = params
               console.log('sdk-receive getAttestationResultRes', params)
-              // this._attestLoading = false
+              this._attestLoading = false
               if (result) {
                 clearInterval(pollingTimer)
                 clearTimeout(timeoutTimer)
@@ -340,7 +343,7 @@ class PrimusZKTLS {
       });
 
     } catch (e: any) {
-      // this._attestLoading = false
+      this._attestLoading = false
       return Promise.reject(e)
     }
   }

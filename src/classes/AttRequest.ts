@@ -13,6 +13,7 @@ export class AttRequest {
   requestid?: string;
   backUrl?: string;
   computeMode?: ComputeMode;
+  extendedParams?: string;
   noProxy?: boolean;
   allJsonResponseFlag?: 'true' | 'false';
   /** Attestation polling timeout in milliseconds. */
@@ -33,6 +34,7 @@ export class AttRequest {
     this.requestid = uuidv4();
     this.backUrl = "";
     this.computeMode = "normal";
+    this.extendedParams = '';
     this.noProxy = true;
     this.allJsonResponseFlag = 'false';
     if (timeout !== undefined) {
@@ -66,6 +68,9 @@ export class AttRequest {
   }
   setComputeMode(computeMode: ComputeMode) {
     this.computeMode = computeMode;
+  }
+  setExtendedParams(extendedParams: string) {
+    this.extendedParams = extendedParams;
   }
   setNoProxy(noProxy: boolean) {
     this.noProxy = noProxy
