@@ -1,89 +1,184 @@
+/**
+ * SDK-facing messages (same strings as `minwensdk.json`), excluding network-only codes:
+ * `00015`, `-500`, `-10101` … `-10111`.
+ */
 export type AttestationErrorCode =
-  "00001" | "00002" | '00003' | "00004" | '00005' | '00006' | "00009" | "00010" |
-  "00101" | "00102" | "00103" | "00104" |
-  "01000" |
-  "10001" | "10002" | "10003" | "10004" |
-  "20001" | "20002" | "20003" | "20004" | "20005" |
-  "30001" | "30002" | "30003" | "30004" |
-  "40001" | "40002" |
-  "50002" | "50003" | "50004"  | "50005" | "50006" | "50007" | "50008"  | "50009"  | "50010" | "50011" |
-  "99999" |
-  "-1200010" | 
-  '-1002001' | '-1002002' | '-1002003' | '-1002004' | '-1002005';
+  | '00000'
+  | '00001'
+  | '00002'
+  | '00003'
+  | '00004'
+  | '00005'
+  | '00006'
+  | '00009'
+  | '00010'
+  | '00101'
+  | '00102'
+  | '00103'
+  | '00104'
+  | '01000'
+  | '10001'
+  | '10002'
+  | '10003'
+  | '10004'
+  | '20001'
+  | '20002'
+  | '20003'
+  | '20004'
+  | '20005'
+  | '30001'
+  | '30002'
+  | '30003'
+  | '30004'
+  | '30005'
+  | '30006'
+  | '40001'
+  | '40002'
+  | '50000'
+  | '50002'
+  | '50003'
+  | '50004'
+  | '50005'
+  | '50006'
+  | '50009'
+  | '50011'
+  | '99999'
+  | '-1002001'
+  | '-1002002'
+  | '-1002003'
+  | '-1002004'
+  | '-1002005'
+  | '-210001';
 
-export type OnChainErrorCode =
-  "00007" | "00008"
-  
+export type OnChainErrorCode = '00007' | '00008';
+
 export type ErrorCode = AttestationErrorCode | OnChainErrorCode;
 
-export const ErrorCodeMAP = {
-  '00000':'Operation too frequent. Please try again later.',
-  '00001':'Algorithm startup exception.',
-  '00002':'The verification process timed out.',
-  '00003':'A verification process is in progress. Please try again later.',
-  '00004':'The user closes or cancels the verification process.',
-  '00005':'Wrong SDK parameters.',
-  '00006':'No Primus extension is installed.',
-  // '00006':'No Primus extension version 0.3.15 or above was detected as installed.',
-  // '00007':'Insufficient wallet balance.',
-  // '00008':'Failed to submit the proof on-chain. Or other errors in the Wallet operations.',
-  // '00009':'Your dApp is not registered. Please contact the Primus team.',
-  // '00010':'Verification failed. Please try again later.',
-  // '00011':'Launch failed: unstable connection.',
-  '00012':'Invalid Template ID.',
-  '00013': 'Target data missing. Please check whether the data json path in the request URL’s response aligns with your template.',
-  '00014':'The verification process timed out.',
-  // "00101":'Insufficient assets in your Trading Account. Please confirm and try again later.',
+export const ErrorCodeMAP: Record<string, string> = {
+  '00000': 'Too many requests. Please try again later.',
+  '00001': 'Failed to start the algorithm.',
+  '00002': 'Verification timed out.',
+  '00003': 'Verification is in progress. Please try again later.',
+  '00004': 'Verification cancelled by user.',
+  '00005': 'Invalid SDK parameters.',
+  '00006':
+    'Extension not detected. Please install and enable Primus Extension from the Chrome Web Store (https://chromewebstore.google.com/detail/primus/oeiomhmbaapihbilkfkhmlajkeegnjhe), then try again.',
+  '00012': 'Invalid template ID.',
+  '00104': 'Verification requirements not met.',
+  '00013':
+    'No verifiable data detected. Please confirm login status and account details.',
+  '00014': 'Verification timed out due to a connection interruption.',
+  '01000': 'Attestation timed out.',
+  '10001': 'Unstable internet connection.',
+  '10002': 'Network connection interrupted during attestation.',
+  '10003': 'Connection to the attestation server was interrupted during processing.',
+  '10004': 'Connection to the data source server was interrupted during processing.',
+  '20001': 'Internal runtime error: LengthException. Contact Primus Team for assistance.',
+  '20002': 'Internal runtime error: OutOfRangeException. Contact Primus Team for assistance.',
+  '20003': 'Invalid algorithm parameters.',
+  '20004': 'Internal runtime error: LogicError. Contact Primus Team for assistance.',
+  '20005': 'Runtime error: NotDefined. Contact Primus Team for assistance.',
+  '30001': 'Response error.',
+  '30001:301': 'Request URL not detected. Contact Primus Team for assistance.',
+  '30001:302': 'Response error. Please try again later.',
+  '30001:401': 'Session expired. Please log in again.',
+  '30001:403':
+    "Access blocked due to data source server's risk control. Please try again later.",
+  '30001:404': 'Request URL not detected. Contact Primus Team for assistance.',
+  '30001:429':
+    'Rate limited by the data source server due to excessive requests from this user. Please try again later.',
+  '30002': 'Response validation error.',
+  '30003': 'Response parsing error. Please try again later.',
+  '30004': 'JSON parsing error. Contact Primus Team for assistance.',
+  '30005': 'HTML parsing error. Contact Primus Team for assistance.',
+  '30006':
+    'Preset path key not found in the response. Contact Primus Team for assistance.',
+  '40001': 'Internal error: FileNotExistException. Contact Primus Team for assistance.',
+  '40002': 'SSL certificate error. Contact Primus Team for assistance.',
+  '50000:501': 'Internal algorithm error. Contact Primus Team for assistance.',
+  '50000:502': 'Internal algorithm error. Contact Primus Team for assistance.',
+  '50003': 'The client encountered an unexpected error. Please try again later.',
+  '50004': 'The client did not start correctly. Please try again.',
+  '50000:505': 'Internal algorithm error. Contact Primus Team for assistance.',
+  '50006': 'Algorithm server not started. Please try again later.',
+  '50000:507': 'Internal algorithm error. Contact Primus Team for assistance.',
+  '50000:508': 'Internal algorithm error. Contact Primus team for assistance.',
+  '50009': 'Algorithm service timed out. Please try again later.',
+  '50000:510': 'Internal algorithm error. Contact Primus Team for assistance.',
+  '50011': 'Unsupported TLS version. Contact Primus Team for assistance.',
+  '99999': 'Undefined error. Please try again later.',
+  '-1002001': 'Invalid app ID.',
+  '-1002002': 'Invalid app secret.',
+  '-1002003': 'Trial quota exhausted.',
+  '-1002004': 'Subscription expired.',
+  '-1002005': 'Quota exhausted.',
+  '-210001': 'Address has pending proof for identityPropertyId.',
+};
 
-  // '00102':'Attestation requirements not met. Insufficient assets balance in Binance Spot Account.',
-  //  "00103": 'This account may have already been bound to a wallet address, or your wallet address may already have a zkAttestation with another Binance account.',
-  '00104': 'Not met the verification requirements.',
+const errorCodeLookup = ErrorCodeMAP as Record<string, string | undefined>;
 
-  '01000': 'Attestation timeout.',
-
-  '10001':'Unstable internet connection. Please try again.',
-  '10002':'Unstable internet connection. Please try again.',
-  '10003':"Unstable internet connection. Please try again.",
-  '10004': "Unstable internet connection. Please try again.",
-  '20001':"An internal error occurred.",
-  // '20002':"Something went wrong. Please try again later.",
-  '20003':"Invalid algorithm parameters.",
-  // '20004': "Something went wrong. Please try again later.",
-  '20005':"Can't complete the attestation due to some workflow error. Please try again later.",
-  '30001': "Response error. Please try again.",
-  '30002': "Response check error.",
-  // '30003': "Can't complete the attestation flow due to response error. Please try again later.",
-  '30004': "Response parse error.",
-  // '40001':"Something went wrong. Please try again later.",
-  '40002': "SSLCertificateError",
-  '50001':"An internal error occurred.",
-  // '50002': "Something went wrong. Please try again later.",
-  '50003':"The client encountered an unexpected error.",
-  '50004': "The client not started. Please try again.",
-  // '50005':"Something went wrong. Please try again later.",
-  '50006': "The algorithm server not started. Please try again.",
-  '50007':"Algorithm execution issues.",
-  '50008':"Abnormal execution results.",
-  '50009': 'Algorithm service timed out.',
-  '50010': "Compatibility issues during algorithm execution.",
-  '50011': "Unsupported TLS version.",
-  '99999':'Undefined error.',
-  '-1200010':"Invalid message.",
-  '-1002001':"Invalid App ID.",
-  '-1002002':"Invalid App Secret.",
-  '-1002003':"Trial quota exhausted.",
-  '-1002004':"Subscription expired.",
-  '-1002005':"Quota exhausted.",
-   '-210001': 'Address has pending proof for identityPropertyId.' // bnbidsdk
+function readDetailsSubCode(data: unknown): string | undefined {
+  if (!data || typeof data !== 'object' || data === null) {
+    return undefined;
+  }
+  const details = (data as { details?: unknown }).details;
+  if (!details || typeof details !== 'object' || details === null) {
+    return undefined;
+  }
+  const raw = (details as { subCode?: unknown }).subCode;
+  if (raw == null || raw === '') {
+    return undefined;
+  }
+  return String(raw);
 }
+
+function resolveZkAttestationErrorMessage(
+  code: ErrorCode,
+  message: string | undefined,
+  data: unknown
+): string | undefined {
+  if (message) {
+    return message;
+  }
+  const subCode = readDetailsSubCode(data);
+  if (subCode) {
+    const compositeKey = `${code}:${subCode}`;
+    const fromComposite = errorCodeLookup[compositeKey];
+    if (fromComposite !== undefined) {
+      return fromComposite;
+    }
+  }
+  return errorCodeLookup[code];
+}
+
+/**
+ * Merge extension `errorData.data` with optional top-level `errorData.details`
+ * so {@link ZkAttestationError} can resolve `code:subCode` messages.
+ */
+export function packZkAttestationErrorData(errorData: {
+  data?: unknown;
+  details?: unknown;
+}): unknown {
+  const { data, details } = errorData;
+  if (details === undefined) {
+    return data;
+  }
+  if (data !== undefined && typeof data === 'object' && data !== null && !Array.isArray(data)) {
+    return { ...(data as Record<string, unknown>), details };
+  }
+  if (data !== undefined) {
+    return { data, details };
+  }
+  return { details };
+}
+
 export class ZkAttestationError {
   code: ErrorCode;
   message: string;
   data?: any;
   constructor(code: ErrorCode, message?: string, data?: any) {
-    this.message = message || ErrorCodeMAP[code as keyof typeof ErrorCodeMAP];
+    this.message = resolveZkAttestationErrorMessage(code, message, data) || '';
     this.code = code;
     this.data = data;
   }
 }
-

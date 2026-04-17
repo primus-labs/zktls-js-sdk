@@ -7,7 +7,7 @@ import {
 } from './config/constants.js';
 import { PACKAGE_VERSION, PACKAGE_NAME } from './generated/packageMeta.js';
 import type { Attestation, SignedAttRequest, InitOptions } from './types.js';
-import { ZkAttestationError } from './error.js';
+import { ZkAttestationError, packZkAttestationErrorData } from './error.js';
 import { AttRequest } from './classes/AttRequest.js';
 import { encodeAttestation, sendRequest, isSolanaAddress } from './utils.js';
 import { getAppQuote } from './api/index.js';
@@ -267,13 +267,19 @@ class PrimusZKTLS {
               } else {
                 this._attestLoading = false
                 window?.removeEventListener('message', eventListener);
-                const { code, data } = errorData;
+                const { code, data, details } = errorData;
                 void eventReport({
                   ...eventReportBaseParams,
                   status: 'FAILED',
                   detail: { code, desc: '' }
                 });
-                reject(new ZkAttestationError(code, '', data))
+                reject(
+                  new ZkAttestationError(
+                    code,
+                    '',
+                    packZkAttestationErrorData({ data, details })
+                  )
+                )
               }
             }
             if (name === "startAttestationRes") {
@@ -324,13 +330,19 @@ class PrimusZKTLS {
                 clearTimeout(timeoutTimer)
                 console.timeEnd('startAttestCost')
                 window?.removeEventListener('message', eventListener);
-                const { code, data/*desc*/ } = errorData;
+                const { code, data/*desc*/, details } = errorData;
                 void eventReport({
                   ...eventReportBaseParams,
                   status: 'FAILED',
                   detail: { code, desc: '' }
                 });
-                reject(new ZkAttestationError(code, '', data))
+                reject(
+                  new ZkAttestationError(
+                    code,
+                    '',
+                    packZkAttestationErrorData({ data, details })
+                  )
+                )
 
 
                 // if (params.reStartFlag) {
