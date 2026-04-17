@@ -117,11 +117,7 @@ export const ErrorCodeMAP: Record<string, string> = {
 
 const errorCodeLookup = ErrorCodeMAP as Record<string, string | undefined>;
 
-function readDetailsSubCode(data: unknown): string | undefined {
-  if (!data || typeof data !== 'object' || data === null) {
-    return undefined;
-  }
-  const details = (data as { details?: unknown }).details;
+function readSubCodeFromDetails(details: unknown): string | undefined {
   if (!details || typeof details !== 'object' || details === null) {
     return undefined;
   }
@@ -132,15 +128,22 @@ function readDetailsSubCode(data: unknown): string | undefined {
   return String(raw);
 }
 
+function readDetailsSubCode(data: unknown): string | undefined {
+  if (!data || typeof data !== 'object' || data === null) {
+    return undefined;
+  }
+  const details = (data as { details?: unknown }).details;
+  return readSubCodeFromDetails(details);
+}
+
 function resolveZkAttestationErrorMessage(
   code: ErrorCode,
   message: string | undefined,
-  data: unknown
+  subCode: string | undefined
 ): string | undefined {
   if (message) {
     return message;
   }
-  const subCode = readDetailsSubCode(data);
   if (subCode) {
     const compositeKey = `${code}:${subCode}`;
     const fromComposite = errorCodeLookup[compositeKey];
@@ -149,6 +152,25 @@ function resolveZkAttestationErrorMessage(
     }
   }
   return errorCodeLookup[code];
+}
+
+/** Wire-format `data` field: always a string; omit nested `details` (subCode is top-level). */
+function dataForJsonExport(stored: unknown): string {
+  if (stored === undefined || stored === null) {
+    return '';
+  }
+  if (typeof stored === 'string') {
+    return stored;
+  }
+  if (typeof stored === 'object' && !Array.isArray(stored)) {
+    const o = { ...(stored as Record<string, unknown>) };
+    delete o.details;
+    if (Object.keys(o).length === 0) {
+      return '';
+    }
+    return JSON.stringify(o);
+  }
+  return JSON.stringify(stored);
 }
 
 /**
@@ -175,10 +197,38 @@ export function packZkAttestationErrorData(errorData: {
 export class ZkAttestationError {
   code: ErrorCode;
   message: string;
+  /** HTTP-style or domain sub-code from `details.subCode` when present. */
+  subCode?: string;
   data?: any;
-  constructor(code: ErrorCode, message?: string, data?: any) {
-    this.message = resolveZkAttestationErrorMessage(code, message, data) || '';
+  /**
+   * @param data - Raw `errorData.data` from the extension (or legacy merged payload).
+   * @param details - Optional `errorData.details`; used for `subCode` / message map when `data` is not an object with nested `details`.
+   */
+  constructor(code: ErrorCode, message?: string, data?: any, details?: unknown) {
+    const subCode = readSubCodeFromDetails(details) ?? readDetailsSubCode(data);
+    this.subCode = subCode;
+    this.message = resolveZkAttestationErrorMessage(code, message, subCode) || '';
     this.code = code;
     this.data = data;
+  }
+
+  /**
+   * Shape for `JSON.stringify` / logging: `{ code, message, subCode?, data }` with `data` always a string.
+   */
+  toJSON(): { code: ErrorCode; message: string; data: string; subCode?: string } {
+    const data = dataForJsonExport(this.data);
+    if (this.subCode !== undefined && this.subCode !== '') {
+      return {
+        code: this.code,
+        message: this.message,
+        subCode: this.subCode,
+        data,
+      };
+    }
+    return {
+      code: this.code,
+      message: this.message,
+      data,
+    };
   }
 }

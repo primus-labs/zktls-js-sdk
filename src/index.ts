@@ -7,7 +7,7 @@ import {
 } from './config/constants.js';
 import { PACKAGE_VERSION, PACKAGE_NAME } from './generated/packageMeta.js';
 import type { Attestation, SignedAttRequest, InitOptions } from './types.js';
-import { ZkAttestationError, packZkAttestationErrorData } from './error.js';
+import { ZkAttestationError } from './error.js';
 import { AttRequest } from './classes/AttRequest.js';
 import { encodeAttestation, sendRequest, isSolanaAddress } from './utils.js';
 import { getAppQuote } from './api/index.js';
@@ -273,13 +273,7 @@ class PrimusZKTLS {
                   status: 'FAILED',
                   detail: { code, desc: '' }
                 });
-                reject(
-                  new ZkAttestationError(
-                    code,
-                    '',
-                    packZkAttestationErrorData({ data, details })
-                  )
-                )
+                reject(new ZkAttestationError(code, '', data, details))
               }
             }
             if (name === "startAttestationRes") {
@@ -336,13 +330,7 @@ class PrimusZKTLS {
                   status: 'FAILED',
                   detail: { code, desc: '' }
                 });
-                reject(
-                  new ZkAttestationError(
-                    code,
-                    '',
-                    packZkAttestationErrorData({ data, details })
-                  )
-                )
+                reject(new ZkAttestationError(code, '', data, details))
 
 
                 // if (params.reStartFlag) {
