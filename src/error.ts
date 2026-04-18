@@ -1,6 +1,5 @@
 /**
- * SDK-facing messages (same strings as `minwensdk.json`), excluding network-only codes:
- * `00015`, `-500`, `-10101` … `-10111`.
+ * SDK-facing messages (aligned with `minwensdk.json` for codes present here; AlphaNet-only codes are omitted).
  */
 export type AttestationErrorCode =
   | '00000'
@@ -12,6 +11,9 @@ export type AttestationErrorCode =
   | '00006'
   | '00009'
   | '00010'
+  | '00012'
+  | '00013'
+  | '00014'
   | '00101'
   | '00102'
   | '00103'
@@ -27,6 +29,12 @@ export type AttestationErrorCode =
   | '20004'
   | '20005'
   | '30001'
+  | '30001:301'
+  | '30001:302'
+  | '30001:401'
+  | '30001:403'
+  | '30001:404'
+  | '30001:429'
   | '30002'
   | '30003'
   | '30004'
@@ -35,6 +43,12 @@ export type AttestationErrorCode =
   | '40001'
   | '40002'
   | '50000'
+  | '50000:501'
+  | '50000:502'
+  | '50000:505'
+  | '50000:507'
+  | '50000:508'
+  | '50000:510'
   | '50002'
   | '50003'
   | '50004'
@@ -56,10 +70,10 @@ export type ErrorCode = AttestationErrorCode | OnChainErrorCode;
 
 export const ErrorCodeMAP: Record<string, string> = {
   '00000': 'Too many requests. Please try again later.',
-  '00001': 'Failed to start the algorithm.',
-  '00002': 'Verification timed out.',
+  '00001': 'Failed to start the algorithm. Please refresh the page, then try again.',
+  '00002': 'The verification process timed out. Please try again later.',
   '00003': 'Verification is in progress. Please try again later.',
-  '00004': 'Verification cancelled by user.',
+  '00004': 'Verification was cancelled by the user.',
   '00005': 'Invalid SDK parameters.',
   '00006':
     'Extension not detected. Please install and enable Primus Extension from the Chrome Web Store (https://chromewebstore.google.com/detail/primus/oeiomhmbaapihbilkfkhmlajkeegnjhe), then try again.',
@@ -67,27 +81,30 @@ export const ErrorCodeMAP: Record<string, string> = {
   '00104': 'Verification requirements not met.',
   '00013':
     'No verifiable data detected. Please confirm login status and account details.',
-  '00014': 'Verification timed out due to a connection interruption.',
+  '00014':
+    'The verification process timed out due to a connection interruption. Please try again later.',
   '01000': 'Attestation timed out.',
-  '10001': 'Unstable internet connection.',
-  '10002': 'Network connection interrupted during attestation.',
-  '10003': 'Connection to the attestation server was interrupted during processing.',
-  '10004': 'Connection to the data source server was interrupted during processing.',
+  '10001': 'Unstable internet connection. Please try again later.',
+  '10002': 'Network connection interrupted during attestation. Please try again later.',
+  '10003':
+    'Connection to the attestation server was interrupted during processing. Please try again later.',
+  '10004':
+    'Connection to the data source server was interrupted during processing. Please try again later.',
   '20001': 'Internal runtime error: LengthException. Contact Primus Team for assistance.',
   '20002': 'Internal runtime error: OutOfRangeException. Contact Primus Team for assistance.',
   '20003': 'Invalid algorithm parameters.',
   '20004': 'Internal runtime error: LogicError. Contact Primus Team for assistance.',
   '20005': 'Runtime error: NotDefined. Contact Primus Team for assistance.',
-  '30001': 'Response error.',
+  '30001': 'Response error. Please try again later.',
   '30001:301': 'Request URL not detected. Contact Primus Team for assistance.',
   '30001:302': 'Response error. Please try again later.',
   '30001:401': 'Session expired. Please log in again.',
   '30001:403':
-    "Access blocked due to data source server's risk control. Please try again later.",
+    "Access blocked due to the data source server's risk control. Please try again later.",
   '30001:404': 'Request URL not detected. Contact Primus Team for assistance.',
   '30001:429':
     'Rate limited by the data source server due to excessive requests from this user. Please try again later.',
-  '30002': 'Response validation error.',
+  '30002': 'Response validation error. Please try again later.',
   '30003': 'Response parsing error. Please try again later.',
   '30004': 'JSON parsing error. Contact Primus Team for assistance.',
   '30005': 'HTML parsing error. Contact Primus Team for assistance.',
@@ -98,7 +115,7 @@ export const ErrorCodeMAP: Record<string, string> = {
   '50000:501': 'Internal algorithm error. Contact Primus Team for assistance.',
   '50000:502': 'Internal algorithm error. Contact Primus Team for assistance.',
   '50003': 'The client encountered an unexpected error. Please try again later.',
-  '50004': 'The client did not start correctly. Please try again.',
+  '50004': 'The client did not start correctly. Please try again later.',
   '50000:505': 'Internal algorithm error. Contact Primus Team for assistance.',
   '50006': 'Algorithm server not started. Please try again later.',
   '50000:507': 'Internal algorithm error. Contact Primus Team for assistance.',
