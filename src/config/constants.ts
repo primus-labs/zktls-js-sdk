@@ -11,7 +11,7 @@ export const PADOADDRESSMAP = {
   production: '0xDB736B13E2f522dBE18B2015d0291E4b193D8eF6',
 };
 
-export const ENV = 'development';
+export const ENV = 'production';
 export const BASEAPIMAP = {
   development: 'https://api-dev.padolabs.org',
   production: 'https://api.padolabs.org',
