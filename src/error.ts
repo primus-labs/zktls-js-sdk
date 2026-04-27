@@ -9,14 +9,9 @@ export type AttestationErrorCode =
   | '00004'
   | '00005'
   | '00006'
-  | '00009'
-  | '00010'
   | '00012'
   | '00013'
   | '00014'
-  | '00101'
-  | '00102'
-  | '00103'
   | '00104'
   | '01000'
   | '10001'
@@ -64,9 +59,8 @@ export type AttestationErrorCode =
   | '-1002005'
   | '-210001';
 
-export type OnChainErrorCode = '00007' | '00008';
 
-export type ErrorCode = AttestationErrorCode | OnChainErrorCode;
+export type ErrorCode = AttestationErrorCode;
 
 export const ErrorCodeMAP: Record<string, string> = {
   '00000': 'Too many requests. Please try again later.',
