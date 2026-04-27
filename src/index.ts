@@ -16,6 +16,14 @@ import type { ClientType } from './api/index.js';
 
 const PACKAGEJSONVERSION = PACKAGE_VERSION;
 const PACKAGENAME = PACKAGE_NAME as ClientType;
+
+function buildEventReportCode(code: string, subCode: unknown): string {
+  if (subCode === undefined || subCode === null || subCode === '') {
+    return code;
+  }
+  return `${code}:${String(subCode)}`;
+}
+
 class PrimusZKTLS {
   private _padoAddress: string;
   private _attestLoading: boolean;
@@ -268,10 +276,11 @@ class PrimusZKTLS {
                 this._attestLoading = false
                 window?.removeEventListener('message', eventListener);
                 const { code, data, details } = errorData;
+                const reportCode = buildEventReportCode(code, details?.subCode);
                 void eventReport({
                   ...eventReportBaseParams,
                   status: 'FAILED',
-                  detail: { code, desc: '' }
+                  detail: { code: reportCode, desc: '' }
                 });
                 reject(new ZkAttestationError(code, '', data, details))
               }
@@ -325,10 +334,11 @@ class PrimusZKTLS {
                 console.timeEnd('startAttestCost')
                 window?.removeEventListener('message', eventListener);
                 const { code, data/*desc*/, details } = errorData;
+                const reportCode = buildEventReportCode(code, details?.subCode);
                 void eventReport({
                   ...eventReportBaseParams,
                   status: 'FAILED',
-                  detail: { code, desc: '' }
+                  detail: { code: reportCode, desc: '' }
                 });
                 reject(new ZkAttestationError(code, '', data, details))
 
