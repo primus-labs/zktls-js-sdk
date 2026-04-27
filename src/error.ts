@@ -100,7 +100,7 @@ export const ErrorCodeMAP: Record<string, string> = {
   '30001:302': 'Response error. Please try again later.',
   '30001:401': 'Session expired. Please log in again.',
   '30001:403':
-    "Access blocked due to the data source server's risk control. Please try again later.",
+    'Access blocked due to the data source server’s risk control. Please try again later.',
   '30001:404': 'Request URL not detected. Contact Primus Team for assistance.',
   '30001:429':
     'Rate limited by the data source server due to excessive requests from this user. Please try again later.',
@@ -119,7 +119,7 @@ export const ErrorCodeMAP: Record<string, string> = {
   '50000:505': 'Internal algorithm error. Contact Primus Team for assistance.',
   '50006': 'Algorithm server not started. Please try again later.',
   '50000:507': 'Internal algorithm error. Contact Primus Team for assistance.',
-  '50000:508': 'Internal algorithm error. Contact Primus team for assistance.',
+  '50000:508': 'Internal algorithm error. Contact Primus Team for assistance.',
   '50009': 'Algorithm service timed out. Please try again later.',
   '50000:510': 'Internal algorithm error. Contact Primus Team for assistance.',
   '50011': 'Unsupported TLS version. Contact Primus Team for assistance.',
