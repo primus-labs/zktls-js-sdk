@@ -129,7 +129,7 @@ export const ErrorCodeMAP: Record<string, string> = {
   '-1002003': 'Trial quota exhausted.',
   '-1002004': 'Subscription expired.',
   '-1002005': 'Quota exhausted.',
-  '-210001': 'Address has pending proof for identityPropertyId.',
+  '-210001': 'Address has pending proof for identityPropertyId.',// just for @primuslabs/bnb-zkid-sdk
 };
 
 const errorCodeLookup = ErrorCodeMAP as Record<string, string | undefined>;
