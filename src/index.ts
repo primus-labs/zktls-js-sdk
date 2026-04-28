@@ -12,7 +12,7 @@ import { AttRequest } from './classes/AttRequest.js';
 import { encodeAttestation, sendRequest, isSolanaAddress } from './utils.js';
 import { getAppQuote } from './api/index.js';
 import { eventReport } from './utils/eventReport.js';
-import type { ClientType } from './api/index.js';
+import type { ClientType, EventReportRawData } from './api/index.js';
 
 const PACKAGEJSONVERSION = PACKAGE_VERSION;
 const PACKAGENAME = PACKAGE_NAME as ClientType;
@@ -23,6 +23,8 @@ function buildEventReportCode(code: string, subCode: unknown): string {
   }
   return `${code}:${String(subCode)}`;
 }
+
+const EVENT_REPORT_SKIP_FAILED_CODES = new Set(['00003', '00004', '00005', '00006', '00014']);
 
 class PrimusZKTLS {
   private _padoAddress: string;
@@ -55,6 +57,17 @@ class PrimusZKTLS {
     this._allJsonResponse = {};
     this._allPrivateData = {};
     this._attestLoading = false;
+  }
+
+  private reportEventIfNeeded(rawDataObj: EventReportRawData): void {
+    if (rawDataObj.status === 'FAILED') {
+      const reportCode = rawDataObj.detail?.code;
+      const baseCode = reportCode ? reportCode.split(':')[0] : undefined;
+      if (baseCode && EVENT_REPORT_SKIP_FAILED_CODES.has(baseCode)) {
+        return;
+      }
+    }
+    void eventReport(rawDataObj);
   }
 
   init(appId: string, appSecret?: string, options?: InitOptions): Promise<string | boolean> {
@@ -255,7 +268,7 @@ class PrimusZKTLS {
                       name: "getAttestationResultTimeout",
                       params: {}
                     });
-                    void eventReport({
+                    this.reportEventIfNeeded({
                       ...eventReportBaseParams,
                       status: 'FAILED',
                       detail: { code: '00002', desc: '' }
@@ -277,7 +290,7 @@ class PrimusZKTLS {
                 window?.removeEventListener('message', eventListener);
                 const { code, data, details } = errorData;
                 const reportCode = buildEventReportCode(code, details?.subCode);
-                void eventReport({
+                this.reportEventIfNeeded({
                   ...eventReportBaseParams,
                   status: 'FAILED',
                   detail: { code: reportCode, desc: '' }
@@ -323,7 +336,7 @@ class PrimusZKTLS {
                   formatParams2.requestid = requestid
                 }
 
-                void eventReport({
+                this.reportEventIfNeeded({
                   ...eventReportBaseParams,
                   status: 'SUCCESS'
                 });
@@ -335,7 +348,7 @@ class PrimusZKTLS {
                 window?.removeEventListener('message', eventListener);
                 const { code, data/*desc*/, details } = errorData;
                 const reportCode = buildEventReportCode(code, details?.subCode);
-                void eventReport({
+                this.reportEventIfNeeded({
                   ...eventReportBaseParams,
                   status: 'FAILED',
                   detail: { code: reportCode, desc: '' }
@@ -397,7 +410,7 @@ class PrimusZKTLS {
             clearInterval(timer);
             clearTimeout(timeoutTimer);
             this.latestRunningMobileRequest = undefined;
-            void eventReport({
+            this.reportEventIfNeeded({
               ...eventReportBaseParams,
               status: 'SUCCESS'
             });
@@ -409,7 +422,7 @@ class PrimusZKTLS {
             clearInterval(timer);
             clearTimeout(timeoutTimer);
             this.latestRunningMobileRequest = undefined;
-            void eventReport({
+            this.reportEventIfNeeded({
               ...eventReportBaseParams,
               status: 'FAILED',
               detail: { code: errorCode, desc: errorMsg || '' }
@@ -425,7 +438,7 @@ class PrimusZKTLS {
         console.log("reject timeout");
         clearInterval(timer);
         this.latestRunningMobileRequest = undefined;
-        void eventReport({
+        this.reportEventIfNeeded({
           ...eventReportBaseParams,
           status: 'FAILED',
           detail: { code: '01000', desc: '' }
