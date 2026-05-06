@@ -250,6 +250,16 @@ class PrimusZKTLS {
       return new Promise((resolve, reject) => {
         let pollingTimer: any
         let timeoutTimer: any
+        const stopGetAttestationResultPolling = () => {
+          if (pollingTimer != null) {
+            clearInterval(pollingTimer)
+            pollingTimer = undefined
+          }
+          if (timeoutTimer != null) {
+            clearTimeout(timeoutTimer)
+            timeoutTimer = undefined
+          }
+        }
         const eventListener = async (event: any) => {
           const { target, name, params } = event.data;
           if (target === "padoZKAttestationJSSDK") {
@@ -259,7 +269,7 @@ class PrimusZKTLS {
               if (result) {
                 timeoutTimer = setTimeout(async () => {
                   if (pollingTimer) {
-                    clearInterval(pollingTimer)
+                    stopGetAttestationResultPolling()
                     this._attestLoading = false
                     window?.removeEventListener('message', eventListener);
                     window.postMessage({
@@ -286,6 +296,8 @@ class PrimusZKTLS {
                   console.log(new Date().toLocaleString(), 'zktls-js-sdk send msg getAttestationResult');
                 }, ATTESTATIONPOLLINGTIME)
               } else {
+                stopGetAttestationResultPolling()
+                console.timeEnd('startAttestCost')
                 this._attestLoading = false
                 window?.removeEventListener('message', eventListener);
                 const { code, data, details } = errorData;
@@ -303,8 +315,7 @@ class PrimusZKTLS {
               console.log('sdk-receive getAttestationResultRes', params)
               this._attestLoading = false
               if (result) {
-                clearInterval(pollingTimer)
-                clearTimeout(timeoutTimer)
+                stopGetAttestationResultPolling()
                 console.timeEnd('startAttestCost')
                 window?.removeEventListener('message', eventListener);
                 const { extendedData, allJsonResponse, privateData, ...formatParams2 } = data;
@@ -342,8 +353,7 @@ class PrimusZKTLS {
                 });
                 resolve(formatParams2)
               } else {
-                clearInterval(pollingTimer)
-                clearTimeout(timeoutTimer)
+                stopGetAttestationResultPolling()
                 console.timeEnd('startAttestCost')
                 window?.removeEventListener('message', eventListener);
                 const { code, data/*desc*/, details } = errorData;

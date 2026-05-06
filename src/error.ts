@@ -9,6 +9,7 @@ export type AttestationErrorCode =
   | '00004'
   | '00005'
   | '00006'
+  | '00007'
   | '00012'
   | '00013'
   | '00014'
@@ -52,6 +53,8 @@ export type AttestationErrorCode =
   | '50009'
   | '50011'
   | '99999'
+  | '99999:000'
+  | '99999:001'
   | '-1002001'
   | '-1002002'
   | '-1002003'
@@ -71,6 +74,8 @@ export const ErrorCodeMAP: Record<string, string> = {
   '00005': 'Invalid SDK parameters.',
   '00006':
     'Extension not detected. Please install and enable Primus Extension from the Chrome Web Store (https://chromewebstore.google.com/detail/primus/oeiomhmbaapihbilkfkhmlajkeegnjhe), then try again.',
+  '00007':
+    'Unable to load the target page. Please check your network connection and try again.',
   '00012': 'Invalid template ID.',
   '00104': 'Verification requirements not met.',
   '00013':
@@ -118,6 +123,8 @@ export const ErrorCodeMAP: Record<string, string> = {
   '50000:510': 'Internal algorithm error. Contact Primus Team for assistance.',
   '50011': 'Unsupported TLS version. Contact Primus Team for assistance.',
   '99999': 'Undefined error. Please try again later.',
+  '99999:000': 'Undefined error. Please try again later.',
+  '99999:001': 'Undefined error. Please try again later.',
   '-1002001': 'Invalid app ID.',
   '-1002002': 'Invalid app secret.',
   '-1002003': 'Trial quota exhausted.',
