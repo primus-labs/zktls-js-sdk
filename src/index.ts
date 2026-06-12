@@ -278,11 +278,11 @@ class PrimusZKTLS {
                       name: "getAttestationResultTimeout",
                       params: {}
                     });
-                    this.reportEventIfNeeded({
-                      ...eventReportBaseParams,
-                      status: 'FAILED',
-                      detail: { code: '00002', desc: '' }
-                    });
+                this.reportEventIfNeeded({
+                  ...eventReportBaseParams,
+                  status: 'FAILED',
+                  detail: { code: '00002', desc: '' },
+                });
                     reject(new ZkAttestationError('00002', 'The SDK reported a timeout.', ''))
                   }
                 }, pollingTimeout)
@@ -305,7 +305,8 @@ class PrimusZKTLS {
                 this.reportEventIfNeeded({
                   ...eventReportBaseParams,
                   status: 'FAILED',
-                  detail: { code: reportCode, desc: '' }
+                  detail: { code: reportCode, desc: '' },
+                  ext: { getAttestationRes: JSON.stringify(errorData.data) }
                 });
                 reject(new ZkAttestationError(code, '', data, details))
               }
@@ -361,7 +362,8 @@ class PrimusZKTLS {
                 this.reportEventIfNeeded({
                   ...eventReportBaseParams,
                   status: 'FAILED',
-                  detail: { code: reportCode, desc: '' }
+                  detail: { code: reportCode, desc: '' },
+                  ext: { getAttestationResultRes: JSON.stringify(errorData.data) }
                 });
                 reject(new ZkAttestationError(code, '', data, details))
 
