@@ -6,7 +6,7 @@ import {
   ATTESTATIONPOLLINGTIMEOUTMOBILE,
 } from './config/constants.js';
 import { PACKAGE_VERSION, PACKAGE_NAME } from './generated/packageMeta.js';
-import type { Attestation, SignedAttRequest, InitOptions } from './types.js';
+import type { Attestation, SignedAttRequest, InitOptions, GenerateRequestParamsOptions } from './types.js';
 import { ZkAttestationError } from './error.js';
 import { AttRequest } from './classes/AttRequest.js';
 import { encodeAttestation, sendRequest, isSolanaAddress } from './utils.js';
@@ -148,12 +148,12 @@ class PrimusZKTLS {
   /**
    * @param attTemplateID - Attestation template ID
    * @param userAddress - Optional user address (defaults to zero address if omitted)
-   * @param options - Optional: attestation polling timeout (ms), and/or close data source tab after successful proof on PC
+   * @param options - Optional attestation request settings applied before signing
    */
   generateRequestParams(
     attTemplateID: string,
     userAddress?: string,
-    options?: { timeout?: number; closeDataSourceOnProofComplete?: boolean }
+    options?: GenerateRequestParamsOptions
   ): AttRequest {
     const userAddr = userAddress || "0x0000000000000000000000000000000000000000"
 
@@ -161,10 +161,7 @@ class PrimusZKTLS {
       appId: this.appId,
       attTemplateID,
       userAddress: userAddr,
-      ...(options?.timeout !== undefined && { timeout: options.timeout }),
-      ...(options?.closeDataSourceOnProofComplete === true && {
-        closeDataSourceOnProofComplete: true,
-      }),
+      ...options,
     })
   }
 
@@ -585,6 +582,7 @@ class PrimusZKTLS {
 }
 
 export { PrimusZKTLS, AttRequest };
+export type { GenerateRequestParamsOptions } from './types.js';
 export { eventReport } from './utils/eventReport.js';
 export { reportEvent } from './api/index.js';
 export type { EventReportRawData, ClientType } from './api/index.js';

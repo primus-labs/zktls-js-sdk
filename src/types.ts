@@ -62,26 +62,30 @@ export type AttModeAlgorithmType = 'mpctls' | 'proxytls'
 export type AttModeResultType = 'plain' | 'cipher'
 export type AttMode = {
   algorithmType: AttModeAlgorithmType;
-  resultType: AttModeResultType;
+  resultType?: AttModeResultType;
+}
+export type GenerateRequestParamsOptions = {
+  /** Attestation polling timeout in milliseconds. */
+  timeout?: number;
+  /** When true, extension closes the data source browser tab after successful proof (PC only). */
+  closeDataSourceOnProofComplete?: boolean;
+  additionParams?: string;
+  attMode?: AttMode;
+  attConditions?: AttConditions;
+  backUrl?: string;
+  computeMode?: ComputeMode;
+  extendedParams?: string;
+  noProxy?: boolean;
+  allJsonResponseFlag?: 'true' | 'false';
 }
 export type BaseAttestationParams = {
   appId: string;
   attTemplateID: string;
   userAddress: string;
-  /** Attestation polling timeout in milliseconds. */
-  timeout?: number;
-  /** When true, extension closes the data source browser tab after successful proof (PC only). */
-  closeDataSourceOnProofComplete?: boolean;
-}
+} & GenerateRequestParamsOptions
 export type FullAttestationParams = BaseAttestationParams & {
   timestamp: number;
-  attMode?: AttMode;
-  attConditions?: AttConditions;
-  additionParams?: string;
   requestid?: string;
-  backUrl?: string;
-  extendedParams?: string;
-  allJsonResponseFlag?: 'true' | 'false';
 }
 export type SignedAttRequest = {
   attRequest: FullAttestationParams,

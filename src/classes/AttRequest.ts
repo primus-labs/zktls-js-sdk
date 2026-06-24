@@ -22,7 +22,21 @@ export class AttRequest {
   closeDataSourceOnProofComplete?: boolean;
 
   constructor(baseAttestationParams: BaseAttestationParams) {
-    const { appId, attTemplateID, userAddress, timeout, closeDataSourceOnProofComplete } = baseAttestationParams
+    const {
+      appId,
+      attTemplateID,
+      userAddress,
+      timeout,
+      closeDataSourceOnProofComplete,
+      additionParams,
+      attMode,
+      attConditions,
+      backUrl,
+      computeMode,
+      extendedParams,
+      noProxy,
+      allJsonResponseFlag
+    } = baseAttestationParams
     this.appId = appId
     this.attTemplateID = attTemplateID
     this.userAddress = userAddress
@@ -40,8 +54,32 @@ export class AttRequest {
     if (timeout !== undefined) {
       this.timeout = timeout;
     }
-    if (closeDataSourceOnProofComplete === true) {
-      this.closeDataSourceOnProofComplete = true;
+    if (closeDataSourceOnProofComplete !== undefined) {
+      this.setCloseDataSourceOnProofComplete(closeDataSourceOnProofComplete);
+    }
+    if (additionParams !== undefined) {
+      this.setAdditionParams(additionParams);
+    }
+    if (attMode !== undefined) {
+      this.setAttMode(attMode);
+    }
+    if (attConditions !== undefined) {
+      this.setAttConditions(attConditions);
+    }
+    if (backUrl !== undefined) {
+      this.setBackUrl(backUrl);
+    }
+    if (computeMode !== undefined) {
+      this.setComputeMode(computeMode);
+    }
+    if (extendedParams !== undefined) {
+      this.setExtendedParams(extendedParams);
+    }
+    if (noProxy !== undefined) {
+      this.setNoProxy(noProxy);
+    }
+    if (allJsonResponseFlag !== undefined) {
+      this.setAllJsonResponseFlag(allJsonResponseFlag);
     }
   }
   setCloseDataSourceOnProofComplete(value: boolean) {
