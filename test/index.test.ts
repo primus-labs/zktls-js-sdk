@@ -29,6 +29,14 @@ describe('listData function', () => {
     expect(encodeData).toBe('0xebb87a4b82fe5980d8e8f43fe98acda9cc44fe98541947004c648a99ff629a3f');
   });
 
+
+  it('rejects malformed attestation params with SDK errors', () => {
+    const zkTLS = new PrimusZKTLS();
+
+    expect(() => (zkTLS as any)._verifyAttestationParams(null)).toThrow('Wrong attestation params!');
+    expect(() => (zkTLS as any)._verifyAttestationParams({ appSignature: '0xsig' })).toThrow('Wrong attestation request!');
+  });
+
   it('verifyAttestation', async () => {
     const att = createAttestation();
     const encodeData = encodeAttestation(att);

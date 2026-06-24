@@ -551,9 +551,14 @@ class PrimusZKTLS {
   }
 
   _verifyAttestationParams(attestationParams: SignedAttRequest): boolean {
-    const { attRequest: { appId,
-      attTemplateID,
-      userAddress, timestamp }, appSignature } = attestationParams
+    if (!attestationParams || typeof attestationParams !== 'object') {
+      throw new ZkAttestationError('00005', 'Wrong attestation params!')
+    }
+    const { attRequest, appSignature } = attestationParams
+    if (!attRequest || typeof attRequest !== 'object') {
+      throw new ZkAttestationError('00005', 'Wrong attestation request!')
+    }
+    const { appId, attTemplateID, userAddress, timestamp } = attRequest
     const checkFn = (label: string, value: any, valueType: string) => {
       if (!value) {
         throw new ZkAttestationError('00005', `Missing ${label}!`)
