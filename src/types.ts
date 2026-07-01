@@ -21,6 +21,10 @@ export type Attestor = {
   attestorAddr: string,
   url: string
 }
+export type AllJsonResponseItem = {
+  id: string;
+  content: unknown;
+}
 export type Attestation = {
   recipient: string,
   request: AttNetworkRequest,

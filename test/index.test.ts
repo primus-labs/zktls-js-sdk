@@ -1,6 +1,7 @@
 import { encodeRequest, encodeResponse, encodeAttestation } from '../src/utils';
 import type { Attestation, AttNetworkRequest, AttNetworkResponseResolve } from '../src/types';
 import { PrimusZKTLS } from '../src/index';
+import { ZkAttestationError } from '../src/error';
 import { ethers } from "ethers";
 
 describe('listData function', () => {
@@ -38,13 +39,92 @@ describe('listData function', () => {
     const sig = await wallet._signingKey().signDigest(encodeData);
     att.signatures[0] = ethers.utils.joinSignature(sig);
     const zkTLS = new PrimusZKTLS();
-    zkTLS.verifyAttestation(att);
+    expect(zkTLS.verifyAttestation(att)).toBe(false);
   });
 
   it('verifySolanaAttestation', async () => {
     const att = createSolanaAttestation();
     const zkTLS = new PrimusZKTLS();
-    zkTLS.verifyAttestation(att);
+    expect(zkTLS.verifyAttestation(att)).toBe(false);
+  });
+
+  it('init rejects when the extension response has no errorData', async () => {
+    jest.useFakeTimers();
+    let listener: ((event: MessageEvent) => void) | undefined;
+    const originalWindow = (globalThis as any).window;
+    (globalThis as any).window = {
+      location: { origin: 'https://example.com' },
+      setTimeout,
+      clearTimeout,
+      primus: true,
+      postMessage: jest.fn(),
+      addEventListener: jest.fn((_name: string, callback: (event: MessageEvent) => void) => {
+        listener = callback;
+      }),
+      removeEventListener: jest.fn()
+    };
+
+    const zkTLS = new PrimusZKTLS();
+    const initPromise = zkTLS.init('test-app-id');
+    listener?.({
+      data: {
+        target: 'padoZKAttestationJSSDK',
+        name: 'initAttestationRes',
+        params: { result: false }
+      },
+      origin: 'https://example.com'
+    } as MessageEvent);
+
+    await expect(initPromise).rejects.toMatchObject({
+      code: '00017',
+    });
+    (globalThis as any).window = originalWindow;
+    jest.useRealTimers();
+  });
+
+  it('startAttestation rejects invalid allJsonResponse payload and clears loading', async () => {
+    let listener: ((event: MessageEvent) => void) | undefined;
+    const originalWindow = (globalThis as any).window;
+    (globalThis as any).window = {
+      location: { origin: 'https://example.com' },
+      postMessage: jest.fn(),
+      addEventListener: jest.fn((_name: string, callback: (event: MessageEvent) => void) => {
+        listener = callback;
+      }),
+      removeEventListener: jest.fn()
+    };
+    const zkTLS = new PrimusZKTLS();
+    zkTLS.isInitialized = true;
+    jest.spyOn(zkTLS as any, '_checkAppQuote').mockResolvedValue(undefined);
+    const signedRequest = JSON.stringify({
+      attRequest: {
+        appId: 'test-app-id',
+        attTemplateID: 'template-id',
+        userAddress: '0x7ab44DE0156925fe0c24482a2cDe48C465e47573',
+        timestamp: Date.now(),
+        requestid: 'test-request-id',
+        allJsonResponseFlag: 'true'
+      },
+      appSignature: '0xsignature'
+    });
+
+    const attestationPromise = zkTLS.startAttestation(signedRequest);
+    await Promise.resolve();
+    listener?.({
+      data: {
+        target: 'padoZKAttestationJSSDK',
+        name: 'startAttestationRes',
+        params: {
+          result: true,
+          data: { recipient: '0x7ab44DE0156925fe0c24482a2cDe48C465e47573' }
+        }
+      },
+      origin: 'https://example.com'
+    } as MessageEvent);
+
+    await expect(attestationPromise).rejects.toBeInstanceOf(ZkAttestationError);
+    expect((zkTLS as any)._attestLoading).toBe(false);
+    (globalThis as any).window = originalWindow;
   });
 
   function createNetworkRequest() {

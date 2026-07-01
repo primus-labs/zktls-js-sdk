@@ -4,18 +4,47 @@ import {
   ATTESTATIONPOLLINGTIMEOUT,
   PADOADDRESSMAP,
   ATTESTATIONPOLLINGTIMEOUTMOBILE,
+  EXTENSION_WEB_SESSION_TOTAL_MS,
+  INIT_ATTESTATION_TIMEOUT,
 } from './config/constants.js';
 import { PACKAGE_VERSION, PACKAGE_NAME } from './generated/packageMeta.js';
-import type { Attestation, SignedAttRequest, InitOptions, GenerateRequestParamsOptions } from './types.js';
-import { ZkAttestationError } from './error.js';
+import type {
+  AllJsonResponseItem,
+  Attestation,
+  SignedAttRequest,
+  InitOptions,
+  GenerateRequestParamsOptions
+} from './types.js';
+import { ErrorCodeMAP, ZkAttestationError } from './error.js';
+import type { ErrorCode } from './error.js';
 import { AttRequest } from './classes/AttRequest.js';
 import { encodeAttestation, sendRequest, isSolanaAddress } from './utils.js';
 import { getAppQuote } from './api/index.js';
 import { eventReport } from './utils/eventReport.js';
 import type { ClientType, EventReportRawData } from './api/index.js';
+import {
+  buildExtensionOutboundMessage,
+  createExtensionSession,
+  EXTENSION_WEB_SESSION_HARD_CAP_MESSAGE,
+  postExtensionOutboundMessage,
+  waitForExtensionInboundMessage,
+} from './classes/extensionMessageBridge.js';
+import type {
+  ExtensionErrorData,
+  GetAttestationResParams,
+  StartAttestationResParams
+} from './types/extensionMessages.js';
+import {
+  isGetAttestationResMessage,
+  isInitAttestationResMessage,
+  isStartAttestationResMessage,
+  parseTrustedExtensionInboundMessage,
+} from './types/extensionMessages.js';
 
 const PACKAGEJSONVERSION = PACKAGE_VERSION;
 const PACKAGENAME = PACKAGE_NAME as ClientType;
+const EXTENSION_GET_ATTESTATION_RES_NO_RESPONSE_MESSAGE =
+  'No response message received from the extension (getAttestationRes).';
 
 function buildEventReportCode(code: string, subCode: unknown): string {
   if (subCode === undefined || subCode === null || subCode === '') {
@@ -25,6 +54,21 @@ function buildEventReportCode(code: string, subCode: unknown): string {
 }
 
 const EVENT_REPORT_SKIP_FAILED_CODES = new Set(['00003', '00004', '00005', '00006', '00014']);
+
+function coerceAttestationErrorCode(code: string | undefined, fallbackCode: ErrorCode): ErrorCode {
+  if (code && Object.prototype.hasOwnProperty.call(ErrorCodeMAP, code)) {
+    return code as ErrorCode;
+  }
+  return fallbackCode;
+}
+
+function readErrorPayload(errorData: ExtensionErrorData | undefined, fallbackCode: ErrorCode = '00005') {
+  return {
+    code: coerceAttestationErrorCode(errorData?.code, fallbackCode),
+    data: errorData?.data,
+    details: errorData?.details,
+  };
+}
 
 class PrimusZKTLS {
   private _padoAddress: string;
@@ -40,7 +84,7 @@ class PrimusZKTLS {
   extendedData: Record<string, any>;
   latestRunningMobileRequest?: string;
   allJsonResponseFlag?: 'true' | 'false';
-  _allJsonResponse: any;
+  _allJsonResponse: Record<string, AllJsonResponseItem[]>;
   private _allPrivateData: Record<string, any>;
 
   constructor() {
@@ -93,18 +137,11 @@ class PrimusZKTLS {
       this.isInitialized = true;
       return Promise.resolve(true)
     } else {
+      if (typeof window === 'undefined') {
+        return Promise.reject(new ZkAttestationError('00006'));
+      }
       this.isInstalled = !!window.primus
       if (this.isInstalled) {
-        window.postMessage({
-          target: "padoExtension",
-          origin: "padoZKAttestationJSSDK",
-          name: "initAttestation",
-          params: {
-            sdkVersion: PACKAGEJSONVERSION,
-            clientType: PACKAGENAME,
-          }
-        });
-
       } else {
         const errorCode = '00006'
         return Promise.reject(new ZkAttestationError(
@@ -112,36 +149,46 @@ class PrimusZKTLS {
         ))
       }
 
-      console.time('initAttestationCost')
-      return new Promise((resolve, reject) => {
-        const eventListener = (event: any) => {
-          const { target, name, params } = event.data;
-          if (target === "padoZKAttestationJSSDK") {
-            if (name === "initAttestationRes") {
-              console.log('sdk receive initAttestationRes', event.data)
-              const { result, errorData, data } = params
-              if (result) {
-                this.isInitialized = params?.result
+      const initResultPromise = this.waitForInitAttestationResult();
+      postExtensionOutboundMessage(
+        buildExtensionOutboundMessage('initAttestation', {
+          sdkVersion: PACKAGEJSONVERSION,
+          clientType: PACKAGENAME,
+        })
+      );
+      return initResultPromise;
+    }
+  }
 
-                if (data?.padoExtensionVersion) {
-                  this.padoExtensionVersion = data.padoExtensionVersion
-                }
-                console.timeEnd('initAttestationCost')
-                window?.removeEventListener('message', eventListener);
-                resolve(this.padoExtensionVersion);
-              } else {
-                window?.removeEventListener('message', eventListener);
-                // console.log('sdk-initAttestationRes-errorData:',errorData)
-                if (errorData) {
-                  const { code } = errorData
-                  reject(new ZkAttestationError(code))
-                }
-              }
-            }
-          }
-        }
-        window.addEventListener("message", eventListener);
+  private async waitForInitAttestationResult(): Promise<string | boolean> {
+    const session = createExtensionSession(EXTENSION_WEB_SESSION_TOTAL_MS);
+    const phaseBudgetMs = session.phaseMs(INIT_ATTESTATION_TIMEOUT);
+    console.time('initAttestationCost')
+
+    try {
+      if (phaseBudgetMs <= 0) {
+        session.throwIfBudgetExhausted();
+      }
+
+      const message = await waitForExtensionInboundMessage({
+        match: (m) => (isInitAttestationResMessage(m) ? m : undefined),
+        timeoutMs: phaseBudgetMs,
+        timeoutError: new ZkAttestationError('00017'),
       });
+
+      const params = message.params;
+      console.log('sdk receive initAttestationRes', params)
+      if (params?.result) {
+        this.isInitialized = params.result
+        if (params.data?.padoExtensionVersion) {
+          this.padoExtensionVersion = params.data.padoExtensionVersion
+        }
+        return this.padoExtensionVersion;
+      }
+      const { code } = readErrorPayload(params?.errorData, '00017');
+      throw new ZkAttestationError(code);
+    } finally {
+      console.timeEnd('initAttestationCost')
     }
   }
 
@@ -172,15 +219,7 @@ class PrimusZKTLS {
     if (typeof window === 'undefined') {
       return Promise.resolve();
     }
-    window.postMessage(
-      {
-        target: 'padoExtension',
-        origin: 'padoZKAttestationJSSDK',
-        name: 'closeDataSourceTab',
-        params: {},
-      },
-      '*'
-    );
+    postExtensionOutboundMessage(buildExtensionOutboundMessage('closeDataSourceTab', {}));
     return Promise.resolve();
   }
 
@@ -224,6 +263,9 @@ class PrimusZKTLS {
       if (isMobilePlatform) {
         return this.startAttestationMobile(attestationParamsStr);
       }
+      if (typeof window === 'undefined') {
+        throw new ZkAttestationError('00006');
+      }
 
       const eventReportBaseParams = {
         source: '',
@@ -235,18 +277,16 @@ class PrimusZKTLS {
       };
 
       const pollingTimeout = attestationParams.attRequest?.timeout ?? ATTESTATIONPOLLINGTIMEOUT;
-      let formatParams: any = { ...attestationParams, sdkVersion: PACKAGEJSONVERSION, clientType: PACKAGENAME}
+      const formatParams: any = { ...attestationParams, sdkVersion: PACKAGEJSONVERSION, clientType: PACKAGENAME}
       this.allJsonResponseFlag = attestationParams?.attRequest?.allJsonResponseFlag === 'true' ? 'true' : 'false'
-      window.postMessage({
-        target: "padoExtension",
-        origin: "padoZKAttestationJSSDK",
-        name: "startAttestation",
-        params: formatParams,
-      });
       console.time('startAttestCost')
       return new Promise((resolve, reject) => {
-        let pollingTimer: any
-        let timeoutTimer: any
+        const session = createExtensionSession(EXTENSION_WEB_SESSION_TOTAL_MS);
+        let settled = false;
+        let timerEnded = false;
+        let pollingTimer: ReturnType<typeof setInterval> | undefined;
+        let timeoutTimer: ReturnType<typeof setTimeout> | undefined;
+        let ackTimer: ReturnType<typeof setTimeout> | undefined;
         const stopGetAttestationResultPolling = () => {
           if (pollingTimer != null) {
             clearInterval(pollingTimer)
@@ -256,124 +296,160 @@ class PrimusZKTLS {
             clearTimeout(timeoutTimer)
             timeoutTimer = undefined
           }
-        }
-        const eventListener = async (event: any) => {
-          const { target, name, params } = event.data;
-          if (target === "padoZKAttestationJSSDK") {
-            if (name === "getAttestationRes") {
-              console.log('sdk receive getAttestationRes', params)
-              const { result, errorData } = params
-              if (result) {
-                timeoutTimer = setTimeout(async () => {
-                  if (pollingTimer) {
-                    stopGetAttestationResultPolling()
-                    this._attestLoading = false
-                    window?.removeEventListener('message', eventListener);
-                    window.postMessage({
-                      target: "padoExtension",
-                      origin: "padoZKAttestationJSSDK",
-                      name: "getAttestationResultTimeout",
-                      params: {}
-                    });
-                this.reportEventIfNeeded({
-                  ...eventReportBaseParams,
-                  status: 'FAILED',
-                  detail: { code: '00002', desc: '' },
-                });
-                    reject(new ZkAttestationError('00002', 'The SDK reported a timeout.', ''))
-                  }
-                }, pollingTimeout)
-                pollingTimer = setInterval(() => {
-                  window.postMessage({
-                    target: "padoExtension",
-                    origin: "padoZKAttestationJSSDK",
-                    name: "getAttestationResult",
-                    params: {}
-                  });
-                  console.log(new Date().toLocaleString(), 'zktls-js-sdk send msg getAttestationResult');
-                }, ATTESTATIONPOLLINGTIME)
-              } else {
-                stopGetAttestationResultPolling()
-                console.timeEnd('startAttestCost')
-                this._attestLoading = false
-                window?.removeEventListener('message', eventListener);
-                const { code, data, details } = errorData;
-                const reportCode = buildEventReportCode(code, details?.subCode);
-                this.reportEventIfNeeded({
-                  ...eventReportBaseParams,
-                  status: 'FAILED',
-                  detail: { code: reportCode, desc: '' },
-                  ext: { getAttestationRes: JSON.stringify(errorData.data) }
-                });
-                reject(new ZkAttestationError(code, '', data, details))
-              }
-            }
-            if (name === "startAttestationRes") {
-              const { result, data, errorData } = params
-              console.log('sdk-receive getAttestationResultRes', params)
-              this._attestLoading = false
-              if (result) {
-                stopGetAttestationResultPolling()
-                console.timeEnd('startAttestCost')
-                window?.removeEventListener('message', eventListener);
-                const { extendedData, allJsonResponse, privateData, ...formatParams2 } = data;
-                let requestid = attestationParams.attRequest.requestid ? attestationParams.attRequest.requestid : '';
-                this.extendedData[requestid] = extendedData;
-  
-                if (privateData) {
-                  try{
-                    this._allPrivateData[requestid] = JSON.parse(privateData);
-                  } catch {
-
-                  }
-                }
-
-                // feat: allJsonResponse
-                let responseResolvesObj = formatParams2?.reponseResolve
-
-                const responseIds = responseResolvesObj.map((i: any) =>
-                  i?.keyName)
-                // console.log('responseIds', responseIds, responseResolvesObj, formatParams2)
-
-                if (this.allJsonResponseFlag === 'true') {
-                  this._allJsonResponse[requestid] = allJsonResponse.map((i: any, k: number) => {
-                    return {
-                      id: responseIds[k],
-                      content: i
-                    }
-                  })
-                  formatParams2.requestid = requestid
-                }
-
-                this.reportEventIfNeeded({
-                  ...eventReportBaseParams,
-                  status: 'SUCCESS'
-                });
-                resolve(formatParams2)
-              } else {
-                stopGetAttestationResultPolling()
-                console.timeEnd('startAttestCost')
-                window?.removeEventListener('message', eventListener);
-                const { code, data/*desc*/, details } = errorData;
-                const reportCode = buildEventReportCode(code, details?.subCode);
-                this.reportEventIfNeeded({
-                  ...eventReportBaseParams,
-                  status: 'FAILED',
-                  detail: { code: reportCode, desc: '' },
-                  ext: { getAttestationResultRes: JSON.stringify(errorData.data) }
-                });
-                reject(new ZkAttestationError(code, '', data, details))
-
-
-                // if (params.reStartFlag) {
-                //   await this.initAttestation(this._dappSymbol)
-                //   console.log('333-reStartFlag')
-                // }
-              }
-            }
+          if (ackTimer != null) {
+            clearTimeout(ackTimer)
+            ackTimer = undefined
           }
         }
+        const endTimer = () => {
+          if (!timerEnded) {
+            timerEnded = true;
+            console.timeEnd('startAttestCost')
+          }
+        }
+        const cleanup = () => {
+          stopGetAttestationResultPolling()
+          endTimer()
+          this._attestLoading = false
+          window?.removeEventListener('message', eventListener);
+        }
+        const settleReject = (error: ZkAttestationError) => {
+          if (settled) {
+            return;
+          }
+          settled = true;
+          cleanup();
+          reject(error);
+        }
+        const settleResolve = (attestation: Attestation) => {
+          if (settled) {
+            return;
+          }
+          settled = true;
+          cleanup();
+          resolve(attestation);
+        }
+        const reportFailure = (code: string, desc = '', ext?: Record<string, any>) => {
+          this.reportEventIfNeeded({
+            ...eventReportBaseParams,
+            status: 'FAILED',
+            detail: { code, desc },
+            ...(ext && { ext })
+          });
+        }
+        const handleGetAttestationRes = (params: GetAttestationResParams) => {
+          console.log('sdk receive getAttestationRes', params)
+          const { result, errorData } = params || {};
+          if (result) {
+            if (pollingTimer) {
+              return;
+            }
+            if (ackTimer != null) {
+              clearTimeout(ackTimer)
+              ackTimer = undefined
+            }
+            const pollingPhaseMs = session.phaseMs(pollingTimeout);
+            if (pollingPhaseMs <= 0) {
+              reportFailure('00002', EXTENSION_WEB_SESSION_HARD_CAP_MESSAGE);
+              settleReject(new ZkAttestationError('00002', EXTENSION_WEB_SESSION_HARD_CAP_MESSAGE, ''));
+              return;
+            }
+            timeoutTimer = setTimeout(() => {
+              if (!pollingTimer) {
+                return;
+              }
+              postExtensionOutboundMessage(buildExtensionOutboundMessage("getAttestationResultTimeout", {}));
+              reportFailure('00002');
+              settleReject(new ZkAttestationError('00002', 'The SDK reported a timeout.', ''))
+            }, pollingPhaseMs)
+            pollingTimer = setInterval(() => {
+              postExtensionOutboundMessage(buildExtensionOutboundMessage("getAttestationResult", {}));
+              console.log(new Date().toLocaleString(), 'zktls-js-sdk send msg getAttestationResult');
+            }, ATTESTATIONPOLLINGTIME)
+            return;
+          }
+          const { code, data, details } = readErrorPayload(errorData);
+          const reportCode = buildEventReportCode(code, details?.subCode);
+          reportFailure(reportCode, '', { getAttestationRes: JSON.stringify(errorData?.data) });
+          settleReject(new ZkAttestationError(code, '', data, details))
+        }
+        const handleStartAttestationRes = (params: StartAttestationResParams) => {
+          const { result, data, errorData } = params || {};
+          console.log('sdk-receive getAttestationResultRes', params)
+          if (result) {
+            const { extendedData, allJsonResponse, privateData, ...formatParams2 } = data || {};
+            const requestid = attestationParams.attRequest.requestid
+              ? attestationParams.attRequest.requestid
+              : '';
+            this.extendedData[requestid] = extendedData;
+
+            if (privateData) {
+              try{
+                this._allPrivateData[requestid] = JSON.parse(privateData);
+              } catch {
+
+              }
+            }
+
+            if (this.allJsonResponseFlag === 'true') {
+              const responseResolvesObj = formatParams2?.reponseResolve;
+              if (!Array.isArray(responseResolvesObj) || !Array.isArray(allJsonResponse)) {
+                reportFailure('00005', 'Invalid allJsonResponse payload');
+                settleReject(new ZkAttestationError('00005', 'Invalid allJsonResponse payload'));
+                return;
+              }
+              const responseIds = responseResolvesObj.map((i: any) =>
+                typeof i?.keyName === 'string' ? i.keyName : '')
+              this._allJsonResponse[requestid] = allJsonResponse.map((i: any, k: number) => {
+                return {
+                  id: responseIds[k] || '',
+                  content: i
+                }
+              })
+              formatParams2.requestid = requestid
+            }
+
+            this.reportEventIfNeeded({
+              ...eventReportBaseParams,
+              status: 'SUCCESS'
+            });
+            settleResolve(formatParams2 as Attestation)
+            return;
+          }
+          const { code, data: errorPayload, details } = readErrorPayload(errorData);
+          const reportCode = buildEventReportCode(code, details?.subCode);
+          reportFailure(reportCode, '', { getAttestationResultRes: JSON.stringify(errorData?.data) });
+          settleReject(new ZkAttestationError(code, '', errorPayload, details))
+        }
+        const eventListener = (event: MessageEvent) => {
+          const message = parseTrustedExtensionInboundMessage(event);
+          if (!message) {
+            return;
+          }
+          try {
+            if (isGetAttestationResMessage(message)) {
+              handleGetAttestationRes(message.params);
+            }
+            if (isStartAttestationResMessage(message)) {
+              handleStartAttestationRes(message.params);
+            }
+          } catch (error: any) {
+            reportFailure('00005', error?.message || 'Invalid extension response');
+            settleReject(error instanceof ZkAttestationError ? error : new ZkAttestationError('00005', error?.message || 'Invalid extension response'));
+          }
+        }
+        const ackPhaseMs = session.phaseMs(INIT_ATTESTATION_TIMEOUT);
+        if (ackPhaseMs <= 0) {
+          reportFailure('00002', EXTENSION_WEB_SESSION_HARD_CAP_MESSAGE);
+          settleReject(new ZkAttestationError('00002', EXTENSION_WEB_SESSION_HARD_CAP_MESSAGE, ''));
+          return;
+        }
+        ackTimer = setTimeout(() => {
+          reportFailure('00017', EXTENSION_GET_ATTESTATION_RES_NO_RESPONSE_MESSAGE);
+          settleReject(new ZkAttestationError('00017', EXTENSION_GET_ATTESTATION_RES_NO_RESPONSE_MESSAGE));
+        }, ackPhaseMs);
         window.addEventListener("message", eventListener);
+        postExtensionOutboundMessage(buildExtensionOutboundMessage("startAttestation", formatParams));
       });
 
     } catch (e: any) {
@@ -575,7 +651,7 @@ class PrimusZKTLS {
     return true
   }
 
-  getAllJsonResponse(requestid: string): string | undefined {
+  getAllJsonResponse(requestid: string): AllJsonResponseItem[] | undefined {
     return this._allJsonResponse[requestid]
   }
 

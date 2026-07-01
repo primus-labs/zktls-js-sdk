@@ -13,6 +13,7 @@ export type AttestationErrorCode =
   | '00012'
   | '00013'
   | '00014'
+  | '00017'
   | '00104'
   | '01000'
   | '10001'
@@ -82,6 +83,7 @@ export const ErrorCodeMAP: Record<string, string> = {
     'No verifiable data detected. Please confirm login status and account details.',
   '00014':
     'The verification process timed out due to a connection interruption. Please try again later.',
+  '00017': 'No response message received from the extension. Please refresh the page and try again.',
   '01000': 'Attestation timed out.',
   '10001': 'Unstable internet connection. Please try again later.',
   '10002': 'Network connection interrupted during attestation. Please try again later.',
