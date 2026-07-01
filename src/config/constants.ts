@@ -19,4 +19,7 @@ export const BASEAPIMAP = {
   production: 'https://api.padolabs.org',
   // production: 'https://api.padolabs.org',
 };
-export const BASEAPI = BASEAPIMAP[ENV]
+export const resolveRuntimeEnv = (env?: string): keyof typeof BASEAPIMAP =>
+  env === 'production' ? 'production' : 'development';
+export const getBaseApi = (env?: string): string => BASEAPIMAP[resolveRuntimeEnv(env)];
+export const BASEAPI = getBaseApi(ENV);

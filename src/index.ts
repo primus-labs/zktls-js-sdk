@@ -6,6 +6,7 @@ import {
   ATTESTATIONPOLLINGTIMEOUTMOBILE,
   EXTENSION_WEB_SESSION_TOTAL_MS,
   INIT_ATTESTATION_TIMEOUT,
+  getBaseApi,
 } from './config/constants.js';
 import { PACKAGE_VERSION, PACKAGE_NAME } from './generated/packageMeta.js';
 import type {
@@ -111,7 +112,11 @@ class PrimusZKTLS {
         return;
       }
     }
-    void eventReport(rawDataObj);
+    void eventReport(rawDataObj, { baseApi: this.getRuntimeBaseApi() });
+  }
+
+  private getRuntimeBaseApi(): string {
+    return getBaseApi(this.options.env);
   }
 
   init(appId: string, appSecret?: string, options?: InitOptions): Promise<string | boolean> {
@@ -585,7 +590,7 @@ class PrimusZKTLS {
    */
   private async _checkAppQuote(): Promise<void> {
     try {
-      const {rc, result} = await getAppQuote({ appId: this.appId });
+      const {rc, result} = await getAppQuote({ appId: this.appId }, { baseApi: this.getRuntimeBaseApi() });
       // console.log('_checkAppQuote', result)
       // Business logic based on quote result
       if (rc !== 0) {
