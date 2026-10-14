@@ -8,7 +8,7 @@ export const ATTESTATIONPOLLINGTIMEOUTMOBILE = 5 * ONEMINUTE;
 
 export const PADOADDRESSMAP = {
   development: '0xe02bd7a6c8aa401189aebb5bad755c2610940a73',
-  production: '0x5ed3176045f68617b0958a61ac1868875c98c14d',
+  production: '0x5Ed3176045F68617B0958a61ac1868875C98C14d',
 };
 
 export const ENV = 'production';
