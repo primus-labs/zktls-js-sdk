@@ -1,5 +1,5 @@
 import type { Attestation, AttNetworkRequest, AttNetworkResponseResolve } from './types.js';
-import { ethers } from "ethers";
+import { ethers } from 'ethers';
 import { PublicKey } from '@solana/web3.js';
 
 export function isValidNumericString(value: string) {  
@@ -54,7 +54,7 @@ export function getInstanceProperties(instance:any) {
 
 export function encodeSolanaAttestation(att: Attestation) {
     const encodedData = ethers.utils.solidityPack(
-        ["bytes32", "bytes32", "bytes32", "string", "string", "uint64", "string"],
+        ['bytes32', 'bytes32', 'bytes32', 'string', 'string', 'uint64', 'string'],
         [solanaAddressToBytes32(att.recipient), encodeRequest(att.request), encodeResponse(att.reponseResolve),
         att.data, att.attConditions, att.timestamp, att.additionParams]
     );
@@ -64,28 +64,31 @@ export function encodeSolanaAttestation(att: Attestation) {
 export function encodeAttestation(att: Attestation) {
     if (isSolanaAddress(att.recipient)) {
         return encodeSolanaAttestation(att);
-    } else {
+    } else if (ethers.utils.isAddress(att.recipient)) {
         const encodedData = ethers.utils.solidityPack(
-            ["address", "bytes32", "bytes32", "string", "string", "uint64", "string"],
+            ['address', 'bytes32', 'bytes32', 'string', 'string', 'uint64', 'string'],
             [att.recipient, encodeRequest(att.request), encodeResponse(att.reponseResolve),
             att.data, att.attConditions, att.timestamp, att.additionParams]
         );
         return ethers.utils.keccak256(encodedData);
+    } else {
+        throw new Error(`Invalid attestation recipient address: ${att.recipient}`);
     }
 }
 export function encodeRequest(request: AttNetworkRequest) {
     const encodedData = ethers.utils.solidityPack(
-        ["string", "string", "string", "string"],
+        ['string', 'string', 'string', 'string'],
         [request.url, request.header, request.method, request.body]
     );
     return ethers.utils.keccak256(encodedData);
 }
 export function encodeResponse(reponse: AttNetworkResponseResolve[]) {
-    let encodeData="0x";
-    for (let i = 0; i < reponse.length; i++) {
+    let encodeData='0x';
+    const items = reponse || [];
+    for (let i = 0; i < items.length; i++) {
         encodeData = ethers.utils.solidityPack(
-          ["bytes", "string", "string", "string"],
-          [encodeData, reponse[i].keyName, reponse[i].parseType, reponse[i].parsePath]
+          ['bytes', 'string', 'string', 'string'],
+          [encodeData, items[i].keyName, items[i].parseType, items[i].parsePath]
         );
     }
 	return ethers.utils.keccak256(encodeData);
@@ -105,9 +108,15 @@ export async function sendRequest(url: string, options?: RequestInit): Promise<a
 }
 
 export function isSolanaAddress(address: string) {
+  if (!address || typeof address !== 'string') {
+    return false;
+  }
+  if (address.startsWith('0x') || address.startsWith('0X')) {
+    return false;
+  }
   try {
     const pk = new PublicKey(address);
-    return PublicKey.isOnCurve(pk);
+    return pk.toBase58() === address;
   } catch (e) {
     return false;
   }
@@ -116,5 +125,5 @@ export function isSolanaAddress(address: string) {
 function solanaAddressToBytes32(address: string) {
   const pubkey = new PublicKey(address);
   const bytes = pubkey.toBytes();
-  return '0x' + Buffer.from(bytes).toString('hex');
+  return ethers.utils.hexlify(bytes);
 }
