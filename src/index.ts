@@ -92,9 +92,13 @@ class PrimusZKTLS {
     } else if (appSecret && isNodeEnv) {
       this.isInitialized = true;
       return Promise.resolve(true)
+    } else if (isNodeEnv) {
+      this.isInitialized = true;
+      this.isInstalled = false;
+      return Promise.resolve(true);
     } else {
-      this.isInstalled = !!window.primus
-      if (this.isInstalled) {
+      this.isInstalled = typeof window !== 'undefined' && !!window.primus
+      if (this.isInstalled && typeof window !== 'undefined') {
         window.postMessage({
           target: "padoExtension",
           origin: "padoZKAttestationJSSDK",
@@ -475,12 +479,25 @@ class PrimusZKTLS {
   }
 
   verifyAttestation(attestation: Attestation): boolean {
-    const encodeData = encodeAttestation(attestation);
-    const signature = attestation.signatures[0];
-    const result = ethers.utils.recoverAddress(encodeData, signature);
-    console.log("sdk verifyAttestation recover address is ", result);
-    const verifyResult = this._padoAddress.toLowerCase() === result.toLowerCase();
-    return verifyResult
+    try {
+      if (!attestation || !Array.isArray(attestation.signatures) || attestation.signatures.length === 0) {
+        return false;
+      }
+      const signature = attestation.signatures[0];
+      if (!signature || typeof signature !== 'string') {
+        return false;
+      }
+      const encodeData = encodeAttestation(attestation);
+      const result = ethers.utils.recoverAddress(encodeData, signature);
+      console.log("sdk verifyAttestation recover address is ", result);
+      const expectedAddress = this._padoAddress || (PADOADDRESSMAP as any)["production"];
+      if (!expectedAddress || !result) {
+        return false;
+      }
+      return expectedAddress.toLowerCase() === result.toLowerCase();
+    } catch {
+      return false;
+    }
   }
 
   getExtendedData(requestid: string): any {

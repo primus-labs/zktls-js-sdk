@@ -48,7 +48,8 @@
   },
   "jest": {
     "moduleNameMapper": {
-      "^(\\.\\.?\\/.+)\\.js$": "$1"
+      "^(\\.\\.?\\/.+)\\.js$": "$1",
+      "^uuid$": "<rootDir>/node_modules/uuid/dist/cjs/index.js"
     },
     "transform": {
       "^.+\\.(ts|tsx)$": "ts-jest"

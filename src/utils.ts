@@ -116,5 +116,5 @@ export function isSolanaAddress(address: string) {
 function solanaAddressToBytes32(address: string) {
   const pubkey = new PublicKey(address);
   const bytes = pubkey.toBytes();
-  return '0x' + Buffer.from(bytes).toString('hex');
+  return ethers.utils.hexlify(bytes);
 }
