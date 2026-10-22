@@ -1,6 +1,6 @@
-import { encodeRequest, encodeResponse, encodeAttestation } from '../src/utils';
-import type { Attestation, AttNetworkRequest, AttNetworkResponseResolve } from '../src/types';
-import { PrimusZKTLS } from '../src/index';
+import { encodeRequest, encodeResponse, encodeAttestation } from '../src/utils.js';
+import type { Attestation, AttNetworkRequest, AttNetworkResponseResolve } from '../src/types.js';
+import { PrimusZKTLS } from '../src/index.js';
 import { ethers } from "ethers";
 
 describe('listData function', () => {
@@ -38,13 +38,46 @@ describe('listData function', () => {
     const sig = await wallet._signingKey().signDigest(encodeData);
     att.signatures[0] = ethers.utils.joinSignature(sig);
     const zkTLS = new PrimusZKTLS();
-    zkTLS.verifyAttestation(att);
+    // Default production signer address differs from test wallet, so result is false
+    const result = zkTLS.verifyAttestation(att);
+    expect(result).toBe(false);
+
+    // If _padoAddress matches the signer wallet, result is true
+    (zkTLS as any)._padoAddress = wallet.address;
+    expect(zkTLS.verifyAttestation(att)).toBe(true);
   });
 
   it('verifySolanaAttestation', async () => {
     const att = createSolanaAttestation();
     const zkTLS = new PrimusZKTLS();
-    zkTLS.verifyAttestation(att);
+    const result = zkTLS.verifyAttestation(att);
+    expect(typeof result).toBe('boolean');
+  });
+
+  it('init succeeds in Node.js without appSecret', async () => {
+    const zkTLS = new PrimusZKTLS();
+    const res = await zkTLS.init('test-app-id');
+    expect(res).toBe(true);
+    expect(zkTLS.isInitialized).toBe(true);
+  });
+
+  it('verifyAttestation safely returns false on invalid or malformed inputs without throwing', () => {
+    const zkTLS = new PrimusZKTLS();
+
+    expect(zkTLS.verifyAttestation(null as any)).toBe(false);
+    expect(zkTLS.verifyAttestation(undefined as any)).toBe(false);
+    expect(zkTLS.verifyAttestation({} as any)).toBe(false);
+    expect(zkTLS.verifyAttestation({ signatures: [] } as any)).toBe(false);
+    expect(zkTLS.verifyAttestation({ signatures: [null] } as any)).toBe(false);
+    expect(zkTLS.verifyAttestation({ signatures: ['0xinvalid'] } as any)).toBe(false);
+    expect(zkTLS.verifyAttestation({ signatures: ['0x1234'] } as any)).toBe(false);
+
+    const att = createAttestation();
+    att.signatures = ['0x1234'];
+    expect(zkTLS.verifyAttestation(att)).toBe(false);
+
+    att.signatures = ['0x' + '00'.repeat(65)];
+    expect(zkTLS.verifyAttestation(att)).toBe(false);
   });
 
   function createNetworkRequest() {
