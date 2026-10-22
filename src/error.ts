@@ -111,6 +111,7 @@ export const ErrorCodeMAP: Record<string, string> = {
     'Preset path key not found in the response. Contact Primus Team for assistance.',
   '40001': 'Internal error: FileNotExistException. Contact Primus Team for assistance.',
   '40002': 'SSL certificate error. Contact Primus Team for assistance.',
+  '50000': 'Internal algorithm error. Contact Primus Team for assistance.',
   '50000:501': 'Internal algorithm error. Contact Primus Team for assistance.',
   '50000:502': 'Internal algorithm error. Contact Primus Team for assistance.',
   '50003': 'The client encountered an unexpected error. Please try again later.',
