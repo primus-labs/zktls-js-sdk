@@ -71,25 +71,27 @@ export async function request<T = any>(config: RequestConfig): Promise<T> {
     }
 
     let responseData: any;
-    try {
-      switch (responseType) {
-        case 'json':
-          responseData = await response.json();
-          break;
-        case 'text':
-          responseData = await response.text();
-          break;
-        case 'blob':
-          responseData = await response.blob();
-          break;
-        case 'arrayBuffer':
-          responseData = await response.arrayBuffer();
-          break;
-        default:
-          responseData = await response.json();
+    switch (responseType) {
+      case 'text':
+        responseData = await response.text();
+        break;
+      case 'blob':
+        responseData = await response.blob();
+        break;
+      case 'arrayBuffer':
+        responseData = await response.arrayBuffer();
+        break;
+      case 'json':
+      default: {
+        // Read the body once so invalid JSON can fall back to the original text.
+        const responseText = await response.text();
+        try {
+          responseData = JSON.parse(responseText);
+        } catch {
+          responseData = responseText;
+        }
+        break;
       }
-    } catch (parseError) {
-      responseData = await response.text();
     }
 
     if (!response.ok) {
